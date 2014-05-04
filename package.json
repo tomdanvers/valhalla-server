@@ -1,0 +1,26 @@
+{
+  "name": "valhalla-server",
+  "version": "0.0.1",
+  "author": "Tom Danvers",
+  "readmeFilename": "README.md",
+  "private": true,
+  "devDependencies": {
+    "grunt": "~0.4.2",
+    "grunt-contrib-jshint": "~0.7.2",
+    "grunt-contrib-requirejs": "~0.4.1",
+    "grunt-contrib-watch": "~0.5.1"
+  },
+  "dependencies": {
+    "express": "~3.4.x",
+    "grunt-express-server": "~0.4.x",
+    "socket.io": "latest"
+  },
+  "engines": {
+    "node": "0.10.x",
+    "npm": "1.3.x"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  }
+}
