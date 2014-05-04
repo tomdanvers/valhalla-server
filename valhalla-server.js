@@ -23,9 +23,9 @@ app.get('/*', route);
 function route(request, response) {
 	switch(request.url){
 		case '/settings.json':
-			response.header('Access-Control-Allow-Origin', '*');
-		    	response.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-		    	response.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With');
+			response.setHeader('Access-Control-Allow-Origin', '*');
+		    	response.setHeader('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+		    	response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With');
 
 		    	// intercept OPTIONS method
 		    	if ('OPTIONS' == request.method) {
