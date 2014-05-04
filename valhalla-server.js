@@ -44,7 +44,7 @@ function route(request, response) {
 	}
 }
 
-var port = process.env.PORT || 80;
+var port = process.env.PORT || 8080;
 
 console.log('Starting Valhalla on port '+port);
 // Multi User
