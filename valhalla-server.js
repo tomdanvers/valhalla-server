@@ -24,6 +24,7 @@ function route(request, response) {
 	switch(request.url){
 		case '/settings.json':
 			response.header('Access-Control-Allow-Origin', '*');
+			response.header('Access-Control-Allow-Headers', 'X-Requested-With');
 			response.send(JSON.stringify(Settings));
 			break;
 		default:
