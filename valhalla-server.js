@@ -3,7 +3,7 @@ var environments = {
 		client : 'http://valhalla-client/'
 	},
 	dev : {
-		client : ''
+		client : 'http://www.tomdanvers.com/labs/valhalla/'
 	}
 }
 
@@ -45,12 +45,11 @@ function route(request, response) {
 }
 
 var port = process.env.PORT || 80;
-port = 80;
 
-
+console.log('Starting Valhalla on port '+port);
 // Multi User
 var io = require('socket.io').listen(app.listen(port, function() {
-  console.log("Welcome to Valhalla. Port: " + port);
+  console.log('Welcome to Valhalla on port ' + port);
 }), {log:false});
 
 
