@@ -204,7 +204,7 @@ Game.prototype.init = function(io, map, time) {
 		players:[]
 	};
 
-	var npcCount = 100;
+	var npcCount = 25;
 	while(npcCount > 0){
 		this.playerAdd(npcCount, true);
 		npcCount --;
