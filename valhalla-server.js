@@ -96,10 +96,9 @@ Time.prototype.update = function() {
 //--------------------------------------------------------PLAYER
 //--------------------------------------------------------------
 
-var Player = function(socket) {
+var Player = function(id, npc) {
 	var pixelsPerMetre = 32;
-	this.socket = socket;
-	this.model = {id:socket.id, x:0, y:0, prewviousX:0, previousY:0};
+	this.model = {id:id, x:0, y:0, prewviousX:0, previousY:0, colour:Math.floor(0xFFFFFF*Math.random())};
 	this.input = {up:false, down:false, left:false, right:false};
 	this.velocityMax = {x:10*pixelsPerMetre, y:25*pixelsPerMetre};
 	this.velocity = {x:0, y:0};
@@ -108,6 +107,19 @@ var Player = function(socket) {
 	this.width = 80;
 	this.height = 100;
 	this.grounded = false;
+
+	if(npc){
+		this.update = function(){
+			if(Math.random() < 0.01) this.input.left = !this.input.left;
+			if(Math.random() < 0.01) this.input.right = !this.input.right;
+			if(Math.random() < 0.01) this.input.up = !this.input.up;
+
+		}
+	}else{
+		this.update = function(){
+
+		}
+	}
 };
 
 Player.prototype = {};
@@ -192,24 +204,30 @@ Game.prototype.init = function(io, map, time) {
 		players:[]
 	};
 
+	var npcCount = 100;
+	while(npcCount > 0){
+		this.playerAdd(npcCount, true);
+		npcCount --;
+	}
+
 	var that = this;
 	io.sockets.on('connection', function(socket){
-		that.playerAdd(socket);
+		that.playerAdd(socket.id, false);
 		socket.on('commands', function(commands){
-			that.commandsHandler(socket, commands);
+			that.commandsHandler(socket.id, commands);
 		});
 		socket.on('disconnect', function(){
-			that.disconnectionHandler(socket);
+			that.disconnectionHandler(socket.id);
 		});
 	});
 };
 
-Game.prototype.disconnectionHandler = function(socket) {
-	this.playerRemove(socket);
+Game.prototype.disconnectionHandler = function(id) {
+	this.playerRemove(id);
 };
 
-Game.prototype.commandsHandler = function(socket, commands) {
-	var player = this.playerGet(socket),
+Game.prototype.commandsHandler = function(id, commands) {
+	var player = this.playerGet(id),
 		commandCount = commands.data.length,
 		command;
 
@@ -264,20 +282,20 @@ Game.prototype.inputUp = function(player, keyCode) {
 	//console.log(player.input);
 };
 
-Game.prototype.playerAdd = function(socket) {
-	var player = new Player(socket);
+Game.prototype.playerAdd = function(id, npc) {
+	var player = new Player(id, npc);
 	this.players.push(player);
-	this.playersMap[socket.id] = player;
+	this.playersMap[id] = player;
 	this.data.players.push(player.model);
 
 	this.playerCount = this.players.length;
 };
 
-Game.prototype.playerRemove = function(socket) {
+Game.prototype.playerRemove = function(id) {
 	var index;
-	var player = this.playerGet(socket);
+	var player = this.playerGet(id);
 
-	delete this.playersMap[socket.id];
+	delete this.playersMap[id];
 	index = this.players.indexOf(player);
 	this.players.splice(index, 1);
 
@@ -287,14 +305,15 @@ Game.prototype.playerRemove = function(socket) {
 	this.playerCount = this.players.length;
 };
 
-Game.prototype.playerGet = function(socket){
-	return this.playersMap[socket.id];
+Game.prototype.playerGet = function(id){
+	return this.playersMap[id];
 };
 
 Game.prototype.updateHandler = function(timeDelta) {
 
 	for (var i = this.playerCount - 1; i >= 0; i--) {
 		this.player = this.players[i];
+		this.player.update();
 
 		// INPUT X
 		if(this.player.input.left || this.player.input.right){
