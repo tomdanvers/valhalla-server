@@ -27,16 +27,12 @@ function route(request, response) {
 		    	response.setHeader('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
 		    	response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With');
 
-		    	// intercept OPTIONS method
 		    	if ('OPTIONS' == request.method) {
 		     	response.send(200);
 		    	}
 		    	else {
 		     	response.send(JSON.stringify(Settings));
 		    	}
-
-			//response.header('Access-Control-Allow-Origin', '*');
-			//response.header('Access-Control-Allow-Headers', 'X-Requested-With');
 			break;
 		default:
 			response.redirect(environment.client);
@@ -98,14 +94,15 @@ Time.prototype.update = function() {
 
 var Player = function(id, npc) {
 	var pixelsPerMetre = 32;
-	this.model = {id:id, x:0, y:0, prewviousX:0, previousY:0, colour:Math.floor(0xFFFFFF*Math.random())};
+	this.model = {id:id, x:0, y:0, levelY:0, previousX:0, previousY:0, colour:Math.floor(0xFFFFFF*Math.random())};
 	this.input = {up:false, down:false, left:false, right:false};
 	this.velocityMax = {x:10*pixelsPerMetre, y:25*pixelsPerMetre};
 	this.velocity = {x:0, y:0};
 	this.accelerationMax = {x:128*pixelsPerMetre, y:64*pixelsPerMetre};
 	this.acceleration = {x:0, y:this.accelerationMax.y};
-	this.width = 80;
-	this.height = 100;
+	this.width = Settings.player.width;
+	this.widthHalf = Settings.player.width*.5;
+	this.height = Settings.player.height;
 	this.grounded = false;
 
 	if(npc){
@@ -284,6 +281,7 @@ Game.prototype.inputUp = function(player, keyCode) {
 
 Game.prototype.playerAdd = function(id, npc) {
 	var player = new Player(id, npc);
+	player.model.x = (this.map.widthPx-Settings.player.width)*Math.random();
 	this.players.push(player);
 	this.playersMap[id] = player;
 	this.data.players.push(player.model);
@@ -334,11 +332,13 @@ Game.prototype.updateHandler = function(timeDelta) {
 
 		// POSITION X
 		this.playerX = this.player.model.x += this.player.velocity.x*timeDelta;
-		if(this.playerX < this.world.left){
-			this.player.model.x = this.world.left;
+		this.playerLeft = this.playerX - this.player.widthHalf;
+		this.playerRight = this.playerX + this.player.widthHalf;
+		if(this.playerLeft < this.world.left){
+			this.player.model.x = this.world.left + this.player.widthHalf;
 			this.player.velocity.x *= -.5;
-		}else if(this.playerX > this.world.right - this.player.width){
-			this.player.model.x = this.world.right - this.player.width;
+		}else if(this.playerRight > this.world.right){
+			this.player.model.x = this.world.right - this.player.widthHalf;
 			this.player.velocity.x *= -.5;
 		}else{
 			this.player.model.x = this.playerX;
@@ -373,6 +373,7 @@ Game.prototype.updateHandler = function(timeDelta) {
 		}else{
 			this.player.model.y = collidedAtPx - this.player.height;
 			this.player.velocity.y = this.player.acceleration.y = 0;
+			this.player.model.levelY = this.player.model.y;
 			this.player.grounded = true;
 		}
 
@@ -398,8 +399,8 @@ Game.prototype.collisionDetectionFloor = function(player, playerNewY) {
 	if(player.velocity.y < 0) return -1;
 
 	var columnsToCheck = [];
-	columnsToCheck.push(this.map.getFloorColumn(player.model.x));
-	columnsToCheck.push(this.map.getFloorColumn(player.model.x+player.width));
+	columnsToCheck.push(this.map.getFloorColumn(this.playerLeft));
+	columnsToCheck.push(this.map.getFloorColumn(this.playerLeft+player.width));
 
 	var columnsToCheckCount = columnsToCheck.length;
 	var yPx;
