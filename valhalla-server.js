@@ -1,14 +1,17 @@
 var environments = {
 	local : {
+		id:'local',
 		client : 'http://valhalla-client/'
 	},
 	dev : {
+		id:'dev',
 		client : 'http://www.tomdanvers.com/labs/valhalla/'
 	}
 }
+var environmentId = process.argv[2];
+var environment = environments[environmentId] === undefined ? environments.local : environments[environmentId];
 
-var environment = environments.local;
-
+console.log('Valhalla environment: '+environment.id);
 
 // Express App Setup
 var express = require('express'),
@@ -289,6 +292,7 @@ Game.prototype.inputUp = function(player, keyCode) {
 Game.prototype.playerAdd = function(id, npc) {
 	var player = new Player(id, npc);
 	player.model.x = (this.map.widthPx-Settings.player.width)*Math.random();
+	player.model.y = player.height;
 	this.players.push(player);
 	this.playersMap[id] = player;
 	this.data.players.push(player.model);
@@ -352,6 +356,9 @@ Game.prototype.updateHandler = function(timeDelta) {
 			this.player.model.x = this.playerX;
 		}
 
+		this.player.left = this.player.model.x - this.player.widthHalf;
+		this.player.right = this.player.model.x + this.player.widthHalf;
+
 		// INPUT Y
 		if(this.player.grounded){
 			if(this.player.input.up){
@@ -372,20 +379,18 @@ Game.prototype.updateHandler = function(timeDelta) {
 		// POSITION Y
 		this.playerY = this.player.model.y + this.player.velocity.y*timeDelta;
 
-		var collidedAtPx = this.collisionDetectionFloor(this.player, this.playerY + this.player.height);
+		var collidedAtPx = this.collisionDetectionFloor(this.player, this.playerY);
 		var collidedAtTile = Math.floor(collidedAtPx/32);
 		if(collidedAtPx == -1 || (this.player.input.down && collidedAtPx/32 < 30)){
 			this.player.model.y = this.playerY;
 			this.player.acceleration.y = this.world.gravity;
 			this.player.grounded = false;
 		}else{
-			this.player.model.y = collidedAtPx - this.player.height;
+			this.player.model.y = collidedAtPx;
 			this.player.velocity.y = this.player.acceleration.y = 0;
 			this.player.model.levelY = this.player.model.y;
 			this.player.grounded = true;
 		}
-
-		this.player.bottom = this.player.model.y + this.player.height;
 
 		// ATTACK
 		if(this.player.attackCooldown > 0){
@@ -415,17 +420,17 @@ Game.prototype.collisionDetectionFloor = function(player, playerNewY) {
 	if(player.velocity.y < 0) return -1;
 
 	var columnsToCheck = [];
-	columnsToCheck.push(this.map.getFloorColumn(this.playerLeft));
-	columnsToCheck.push(this.map.getFloorColumn(this.playerLeft+player.width));
+	columnsToCheck.push(this.map.getFloorColumn(player.left));
+	columnsToCheck.push(this.map.getFloorColumn(player.right));
 
 	var columnsToCheckCount = columnsToCheck.length;
 	var yPx;
 	for (var i = 0; i < columnsToCheckCount; i++) {
 		for(var y in columnsToCheck[i]){
 			yPx = y*this.map.tileHeight;
-			if(player.bottom < yPx && playerNewY > yPx) {
+			if(player.model.y < yPx && playerNewY > yPx) {
 				return yPx;
-			}else if(player.bottom === yPx){
+			}else if(player.model.y === yPx){
 				return yPx;
 			}
 		}
@@ -452,15 +457,22 @@ Game.prototype.playerAttacks = function(player) {
 			}
 		}
 	}
-
+	player.velocity.x = 0;
+	player.acceleration.x = 0;
 	player.attackCooldown = 50;
 }
 
 Game.prototype.playerAttack = function(player, opponent) {
-	if(Math.abs(player.model.y - opponent.model.y) < 150 && Math.abs(player.model.x - opponent.model.x) < 250){
-		console.log(player.model.id + ' - hit - ' + opponent.model.id);
+	var diffX = player.model.x - opponent.model.x;
+	var diffY = player.model.y - opponent.model.y;
+	var distance;
+	var damageMultiplier;
+	if(Math.abs(diffX) < 150 && diffY < player.height && diffY > -player.height*.2){
 		opponent.velocity.x += player.model.facing * 500;
-		opponent.velocity.y = -1000;
+		distance = 150-Math.sqrt((diffX*diffX)+(diffY*diffY))
+		damageMultiplier = distance/150;
+		console.log('distance: '+damageMultiplier);
+		opponent.velocity.y = -10*distance;
 	}
 }
 //--------------------------------------------------------------

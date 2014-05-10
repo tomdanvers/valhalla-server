@@ -7,7 +7,7 @@ module.exports = function (grunt) {
     watch: {
       express: {
         files:  [ 'valhalla-server.js' ],
-        tasks:  [ 'express:dev' ],
+        tasks:  [ 'express:local' ],
         options: {
           spawn: false
         }
@@ -17,10 +17,10 @@ module.exports = function (grunt) {
       options: {
         port: 8080
       },
-      dev: {
+      local: {
         options: {
           script: 'valhalla-server.js',
-          node_env: 'dev'
+          node_env: 'local'
         }
       },
       prod: {
@@ -37,7 +37,7 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-watch');
 
   // server
-  grunt.registerTask('server', ['express:dev:start', 'watch']);
+  grunt.registerTask('server', ['express:local:start', 'watch']);
 
   // default
   grunt.registerTask('default', ['server']);
