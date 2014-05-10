@@ -94,7 +94,7 @@ Time.prototype.update = function() {
 
 var Player = function(id, npc) {
 	var pixelsPerMetre = 32;
-	this.model = {id:id, x:0, y:0, levelY:0, previousX:0, previousY:0, colour:Math.floor(0xFFFFFF*Math.random())};
+	this.model = {id:id, x:0, y:0, levelY:0, previousX:0, previousY:0, facing:1, colour:Math.floor(0xFFFFFF*Math.random())};
 	this.input = {up:false, down:false, left:false, right:false};
 	this.velocityMax = {x:10*pixelsPerMetre, y:25*pixelsPerMetre};
 	this.velocity = {x:0, y:0};
@@ -104,6 +104,7 @@ var Player = function(id, npc) {
 	this.widthHalf = Settings.player.width*.5;
 	this.height = Settings.player.height;
 	this.grounded = false;
+	this.attackCooldown = 0;
 
 	if(npc){
 		this.update = function(){
@@ -245,6 +246,9 @@ Game.prototype.commandsHandler = function(id, commands) {
 
 Game.prototype.inputDown = function(player, keyCode) {
 	switch(keyCode){
+		case 32://SPACE
+			player.input.space = true;
+			break;
 		case 37://L
 			player.input.left = true;
 			break;
@@ -258,11 +262,15 @@ Game.prototype.inputDown = function(player, keyCode) {
 			player.input.down = true;
 			break;
 	}
+	console.log(keyCode);
 	//console.log(player.input);
 };
 
 Game.prototype.inputUp = function(player, keyCode) {
 	switch(keyCode){
+		case 32://SPACE
+			player.input.space = false;
+			break;
 		case 37://L
 			player.input.left = false;
 			break;
@@ -276,7 +284,6 @@ Game.prototype.inputUp = function(player, keyCode) {
 			player.input.down = false;
 			break;
 	}
-	//console.log(player.input);
 };
 
 Game.prototype.playerAdd = function(id, npc) {
@@ -317,6 +324,7 @@ Game.prototype.updateHandler = function(timeDelta) {
 		if(this.player.input.left || this.player.input.right){
 			var accelMultiplier = this.player.grounded ? 1 : .25;
 			this.player.acceleration.x = this.player.input.left ? -this.player.accelerationMax.x*accelMultiplier : this.player.accelerationMax.x*accelMultiplier;
+			this.player.model.facing = this.player.input.left ? -1 : 1;
 		}else{
 			this.player.acceleration.x = 0;
 			if(this.player.grounded){
@@ -379,6 +387,13 @@ Game.prototype.updateHandler = function(timeDelta) {
 
 		this.player.bottom = this.player.model.y + this.player.height;
 
+		// ATTACK
+		if(this.player.attackCooldown > 0){
+			this.player.attackCooldown --;
+		}else if(this.player.attackCooldown == 0 && this.player.input.space){
+			this.playerAttacks(this.player);
+		}
+
 		function constrain(val, maxVal) {
 			if(val > maxVal){
 				return maxVal;
@@ -393,6 +408,7 @@ Game.prototype.updateHandler = function(timeDelta) {
 
 	io.sockets.emit('update', {time:this.time.current, data:this.data});
 };
+
 
 Game.prototype.collisionDetectionFloor = function(player, playerNewY) {
 
@@ -418,6 +434,35 @@ Game.prototype.collisionDetectionFloor = function(player, playerNewY) {
 	return -1;
 };
 
+Game.prototype.playerAttacks = function(player) {
+
+	var attackRight = player.model.facing > 0;
+	var opponent;
+	for (var i = this.playerCount - 1; i >= 0; i--) {
+		opponent = this.players[i];
+		if(opponent != player){
+			if(opponent.model.x > player.model.x){
+				if(attackRight){
+					this.playerAttack(player, opponent);
+				}
+			}else {
+				if(!attackRight){
+					this.playerAttack(player, opponent);
+				}
+			}
+		}
+	}
+
+	player.attackCooldown = 50;
+}
+
+Game.prototype.playerAttack = function(player, opponent) {
+	if(Math.abs(player.model.y - opponent.model.y) < 150 && Math.abs(player.model.x - opponent.model.x) < 250){
+		console.log(player.model.id + ' - hit - ' + opponent.model.id);
+		opponent.velocity.x += player.model.facing * 500;
+		opponent.velocity.y = -1000;
+	}
+}
 //--------------------------------------------------------------
 //----------------------------------------------------------INIT
 //--------------------------------------------------------------
