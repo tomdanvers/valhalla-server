@@ -1,11 +1,13 @@
 var environments = {
 	local : {
 		id:'local',
-		client : 'http://valhalla-client/'
+		client : 'http://valhalla-client/',
+		npcCount : 50
 	},
 	dev : {
 		id:'dev',
-		client : 'http://www.tomdanvers.com/labs/valhalla/'
+		client : 'http://www.tomdanvers.com/labs/valhalla/',
+		npcCount : 20
 	}
 }
 var environmentId = process.argv[2];
@@ -60,7 +62,8 @@ var Settings = {
 	map : JSON.parse(fs.readFileSync('valhalla-map/valhalla-map.json', encoding="ascii")),
 	player : {
 		width:80,
-		height:100
+		height:100,
+		healthMax:25
 	}
 };
 
@@ -97,7 +100,7 @@ Time.prototype.update = function() {
 
 var Player = function(id, npc) {
 	var pixelsPerMetre = 32;
-	this.model = {id:id, x:0, y:0, levelY:0, previousX:0, previousY:0, facing:1, colour:Math.floor(0xFFFFFF*Math.random())};
+	this.model = {id:id, x:0, y:0, levelY:0, previousX:0, previousY:0, facing:1, health:25, colour:Math.floor(0xFFFFFF*Math.random())};
 	this.input = {up:false, down:false, left:false, right:false};
 	this.velocityMax = {x:10*pixelsPerMetre, y:25*pixelsPerMetre};
 	this.velocity = {x:0, y:0};
@@ -107,6 +110,7 @@ var Player = function(id, npc) {
 	this.widthHalf = Settings.player.width*.5;
 	this.height = Settings.player.height;
 	this.grounded = false;
+	this.isAlive = true;
 	this.attackCooldown = 0;
 
 	if(npc){
@@ -114,6 +118,8 @@ var Player = function(id, npc) {
 			if(Math.random() < 0.01) this.input.left = !this.input.left;
 			if(Math.random() < 0.01) this.input.right = !this.input.right;
 			if(Math.random() < 0.01) this.input.up = !this.input.up;
+			if(this.input.space) this.input.space = false;
+			if(Math.random() < 0.01) this.input.space = true;
 
 		}
 	}else{
@@ -205,7 +211,7 @@ Game.prototype.init = function(io, map, time) {
 		players:[]
 	};
 
-	var npcCount = 25;
+	var npcCount = environment.npcCount;
 	while(npcCount > 0){
 		this.playerAdd(npcCount, true);
 		npcCount --;
@@ -265,8 +271,7 @@ Game.prototype.inputDown = function(player, keyCode) {
 			player.input.down = true;
 			break;
 	}
-	console.log(keyCode);
-	//console.log(player.input);
+	//console.log(keyCode);
 };
 
 Game.prototype.inputUp = function(player, keyCode) {
@@ -322,91 +327,98 @@ Game.prototype.updateHandler = function(timeDelta) {
 
 	for (var i = this.playerCount - 1; i >= 0; i--) {
 		this.player = this.players[i];
-		this.player.update();
+		if(this.player.isAlive){
+			this.player.update();
 
-		// INPUT X
-		if(this.player.input.left || this.player.input.right){
-			var accelMultiplier = this.player.grounded ? 1 : .25;
-			this.player.acceleration.x = this.player.input.left ? -this.player.accelerationMax.x*accelMultiplier : this.player.accelerationMax.x*accelMultiplier;
-			this.player.model.facing = this.player.input.left ? -1 : 1;
-		}else{
-			this.player.acceleration.x = 0;
+			// INPUT X
+			if(this.player.input.left || this.player.input.right){
+				var accelMultiplier = this.player.grounded ? 1 : .25;
+				this.player.acceleration.x = this.player.input.left ? -this.player.accelerationMax.x*accelMultiplier : this.player.accelerationMax.x*accelMultiplier;
+				this.player.model.facing = this.player.input.left ? -1 : 1;
+			}else{
+				this.player.acceleration.x = 0;
+				if(this.player.grounded){
+					this.player.velocity.x *=.7;
+				}else{
+					this.player.velocity.x *=.99;
+				}
+			}
+
+			// VELOCITY X
+			this.player.velocity.x += this.player.acceleration.x*timeDelta;
+			this.player.velocity.x = constrain(this.player.velocity.x, this.player.velocityMax.x);
+
+			// POSITION X
+			this.playerX = this.player.model.x += this.player.velocity.x*timeDelta;
+			this.playerLeft = this.playerX - this.player.widthHalf;
+			this.playerRight = this.playerX + this.player.widthHalf;
+			if(this.playerLeft < this.world.left){
+				this.player.model.x = this.world.left + this.player.widthHalf;
+				this.player.velocity.x *= -.5;
+			}else if(this.playerRight > this.world.right){
+				this.player.model.x = this.world.right - this.player.widthHalf;
+				this.player.velocity.x *= -.5;
+			}else{
+				this.player.model.x = this.playerX;
+			}
+
+			this.player.left = this.player.model.x - this.player.widthHalf;
+			this.player.right = this.player.model.x + this.player.widthHalf;
+
+			// INPUT Y
 			if(this.player.grounded){
-				this.player.velocity.x *=.7;
-			}else{
-				this.player.velocity.x *=.99;
+				if(this.player.input.up){
+					this.player.velocity.y = -this.player.velocityMax.y;
+					this.player.acceleration.y = this.world.gravity;
+					this.player.grounded = false;
+				}
+
+				if(this.player.input.down){
+					this.player.acceleration.y = this.world.gravity;
+					this.player.grounded = false;
+				}
 			}
-		}
 
-		// VELOCITY X
-		this.player.velocity.x += this.player.acceleration.x*timeDelta;
-		this.player.velocity.x = constrain(this.player.velocity.x, this.player.velocityMax.x);
+			// VELOCITY Y
+			this.player.velocity.y += this.player.acceleration.y*timeDelta;
 
-		// POSITION X
-		this.playerX = this.player.model.x += this.player.velocity.x*timeDelta;
-		this.playerLeft = this.playerX - this.player.widthHalf;
-		this.playerRight = this.playerX + this.player.widthHalf;
-		if(this.playerLeft < this.world.left){
-			this.player.model.x = this.world.left + this.player.widthHalf;
-			this.player.velocity.x *= -.5;
-		}else if(this.playerRight > this.world.right){
-			this.player.model.x = this.world.right - this.player.widthHalf;
-			this.player.velocity.x *= -.5;
-		}else{
-			this.player.model.x = this.playerX;
-		}
+			// POSITION Y
+			this.playerY = this.player.model.y + this.player.velocity.y*timeDelta;
 
-		this.player.left = this.player.model.x - this.player.widthHalf;
-		this.player.right = this.player.model.x + this.player.widthHalf;
-
-		// INPUT Y
-		if(this.player.grounded){
-			if(this.player.input.up){
-				this.player.velocity.y = -this.player.velocityMax.y;
+			var collidedAtPx = this.collisionDetectionFloor(this.player, this.playerY);
+			var collidedAtTile = Math.floor(collidedAtPx/32);
+			if(collidedAtPx == -1 || (this.player.input.down && collidedAtPx/32 < 30)){
+				this.player.model.y = this.playerY;
 				this.player.acceleration.y = this.world.gravity;
 				this.player.grounded = false;
-			}
-
-			if(this.player.input.down){
-				this.player.acceleration.y = this.world.gravity;
-				this.player.grounded = false;
-			}
-		}
-
-		// VELOCITY Y
-		this.player.velocity.y += this.player.acceleration.y*timeDelta;
-
-		// POSITION Y
-		this.playerY = this.player.model.y + this.player.velocity.y*timeDelta;
-
-		var collidedAtPx = this.collisionDetectionFloor(this.player, this.playerY);
-		var collidedAtTile = Math.floor(collidedAtPx/32);
-		if(collidedAtPx == -1 || (this.player.input.down && collidedAtPx/32 < 30)){
-			this.player.model.y = this.playerY;
-			this.player.acceleration.y = this.world.gravity;
-			this.player.grounded = false;
-		}else{
-			this.player.model.y = collidedAtPx;
-			this.player.velocity.y = this.player.acceleration.y = 0;
-			this.player.model.levelY = this.player.model.y;
-			this.player.grounded = true;
-		}
-
-		// ATTACK
-		if(this.player.attackCooldown > 0){
-			this.player.attackCooldown --;
-		}else if(this.player.attackCooldown == 0 && this.player.input.space){
-			this.playerAttacks(this.player);
-		}
-
-		function constrain(val, maxVal) {
-			if(val > maxVal){
-				return maxVal;
-			}else if(val < -maxVal){
-				return -maxVal;
 			}else{
-				return val;
+				this.player.model.y = collidedAtPx;
+				this.player.velocity.y = this.player.acceleration.y = 0;
+				this.player.model.levelY = this.player.model.y;
+				this.player.grounded = true;
 			}
+
+			// ATTACK
+			if(this.player.attackCooldown > 0){
+				this.player.attackCooldown -= (timeDelta);
+			}else if(this.player.attackCooldown <= 0 && this.player.input.space){
+				this.playerAttacks(this.player);
+			}
+
+			function constrain(val, maxVal) {
+				if(val > maxVal){
+					return maxVal;
+				}else if(val < -maxVal){
+					return -maxVal;
+				}else{
+					return val;
+				}
+			}
+		}else{
+			this.player.isAlive = true;
+			this.player.model.health = Settings.player.healthMax;
+			this.player.model.x = (this.map.widthPx-Settings.player.width)*Math.random();
+			this.player.model.y = this.player.height;
 		}
 	};
 
@@ -459,7 +471,7 @@ Game.prototype.playerAttacks = function(player) {
 	}
 	player.velocity.x = 0;
 	player.acceleration.x = 0;
-	player.attackCooldown = 50;
+	player.attackCooldown = 1;
 }
 
 Game.prototype.playerAttack = function(player, opponent) {
@@ -469,11 +481,19 @@ Game.prototype.playerAttack = function(player, opponent) {
 	var damageMultiplier;
 	if(Math.abs(diffX) < 150 && diffY < player.height && diffY > -player.height*.2){
 		opponent.velocity.x += player.model.facing * 500;
-		distance = 150-Math.sqrt((diffX*diffX)+(diffY*diffY))
-		damageMultiplier = distance/150;
-		console.log('distance: '+damageMultiplier);
-		opponent.velocity.y = -10*distance;
+		opponent.velocity.y = -200;
+		//distance = 150-Math.sqrt((diffX*diffX)+(diffY*diffY))
+		//damageMultiplier = distance/150;
+
+		opponent.model.health -= 5;
+		if(opponent.model.health <= 0){
+			this.death(opponent);
+		}
 	}
+}
+
+Game.prototype.death = function(player) {
+	player.isAlive = false;
 }
 //--------------------------------------------------------------
 //----------------------------------------------------------INIT
