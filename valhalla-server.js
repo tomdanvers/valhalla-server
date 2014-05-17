@@ -2,12 +2,12 @@ var environments = {
 	local : {
 		id:'local',
 		client : 'http://valhalla-client/',
-		npcCount : 50
+		npcCount : 15
 	},
 	dev : {
 		id:'dev',
 		client : 'http://www.tomdanvers.com/labs/valhalla/',
-		npcCount : 20
+		npcCount : 15
 	}
 }
 var environmentId = process.argv[2];
@@ -331,10 +331,21 @@ Game.prototype.updateHandler = function(timeDelta) {
 			this.player.update();
 
 			// INPUT X
-			if(this.player.input.left || this.player.input.right){
-				var accelMultiplier = this.player.grounded ? 1 : .25;
-				this.player.acceleration.x = this.player.input.left ? -this.player.accelerationMax.x*accelMultiplier : this.player.accelerationMax.x*accelMultiplier;
-				this.player.model.facing = this.player.input.left ? -1 : 1;
+			var accelMultiplier = this.player.grounded ? 1 : .25;
+			if(this.player.input.left){
+				if(this.player.velocity.x > -this.player.velocityMax.x){
+					this.player.acceleration.x = -this.player.accelerationMax.x*accelMultiplier;
+				}else{
+					this.player.acceleration.x = 0;
+				}
+				this.player.model.facing = -1;
+			}else if(this.player.input.right){
+				if(this.player.velocity.x < this.player.velocityMax.x){
+					this.player.acceleration.x = this.player.accelerationMax.x*accelMultiplier;
+				}else{
+					this.player.acceleration.x = 0;
+				}
+				this.player.model.facing = 1;
 			}else{
 				this.player.acceleration.x = 0;
 				if(this.player.grounded){
@@ -346,7 +357,7 @@ Game.prototype.updateHandler = function(timeDelta) {
 
 			// VELOCITY X
 			this.player.velocity.x += this.player.acceleration.x*timeDelta;
-			this.player.velocity.x = constrain(this.player.velocity.x, this.player.velocityMax.x);
+			//this.player.velocity.x = constrain(this.player.velocity.x, this.player.velocityMax.x);
 
 			// POSITION X
 			this.playerX = this.player.model.x += this.player.velocity.x*timeDelta;
@@ -480,8 +491,8 @@ Game.prototype.playerAttack = function(player, opponent) {
 	var distance;
 	var damageMultiplier;
 	if(Math.abs(diffX) < 150 && diffY < player.height && diffY > -player.height*.2){
-		opponent.velocity.x += player.model.facing * 500;
-		opponent.velocity.y = -200;
+		opponent.velocity.x = player.model.facing * 750;
+		opponent.velocity.y = -400;
 		//distance = 150-Math.sqrt((diffX*diffX)+(diffY*diffY))
 		//damageMultiplier = distance/150;
 

@@ -6,7 +6,7 @@ module.exports = function (grunt) {
     pkg: grunt.file.readJSON('package.json'),
     watch: {
       express: {
-        files:  [ 'valhalla-server.js' ],
+        files:  [ 'valhalla-server.js','valhalla-map/**/*.*'],
         tasks:  [ 'express:local' ],
         options: {
           spawn: false
