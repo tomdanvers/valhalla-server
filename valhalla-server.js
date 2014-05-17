@@ -118,6 +118,7 @@ var Player = function(id, npc) {
 			if(Math.random() < 0.01) this.input.left = !this.input.left;
 			if(Math.random() < 0.01) this.input.right = !this.input.right;
 			if(Math.random() < 0.01) this.input.up = !this.input.up;
+			if(Math.random() < 0.005) this.input.down = !this.input.down;
 			if(this.input.space) this.input.space = false;
 			if(Math.random() < 0.01) this.input.space = true;
 
@@ -332,20 +333,10 @@ Game.prototype.updateHandler = function(timeDelta) {
 
 			// INPUT X
 			var accelMultiplier = this.player.grounded ? 1 : .25;
-			if(this.player.input.left){
-				if(this.player.velocity.x > -this.player.velocityMax.x){
-					this.player.acceleration.x = -this.player.accelerationMax.x*accelMultiplier;
-				}else{
-					this.player.acceleration.x = 0;
-				}
-				this.player.model.facing = -1;
-			}else if(this.player.input.right){
-				if(this.player.velocity.x < this.player.velocityMax.x){
-					this.player.acceleration.x = this.player.accelerationMax.x*accelMultiplier;
-				}else{
-					this.player.acceleration.x = 0;
-				}
-				this.player.model.facing = 1;
+			if(this.player.input.left && this.player.velocity.x > -this.player.velocityMax.x){
+				this.player.acceleration.x = -this.player.accelerationMax.x*accelMultiplier;
+			}else if(this.player.input.right && this.player.velocity.x < this.player.velocityMax.x){
+				this.player.acceleration.x = this.player.accelerationMax.x*accelMultiplier;
 			}else{
 				this.player.acceleration.x = 0;
 				if(this.player.grounded){
@@ -353,6 +344,12 @@ Game.prototype.updateHandler = function(timeDelta) {
 				}else{
 					this.player.velocity.x *=.99;
 				}
+			}
+
+			if(this.player.input.left){
+				this.player.model.facing = -1;
+			}else if(this.player.input.right){
+				this.player.model.facing = 1;
 			}
 
 			// VELOCITY X

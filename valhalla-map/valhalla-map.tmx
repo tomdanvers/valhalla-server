@@ -2,15 +2,25 @@
 <map version="1.0" orientation="orthogonal" width="64" height="32" tilewidth="32" tileheight="32">
  <tileset firstgid="1" name="tiles" tilewidth="32" tileheight="32">
   <image source="tilesets/tiles.png" trans="ff00ff" width="1024" height="1024"/>
+  <terraintypes>
+   <terrain name="Stone" tile="-1"/>
+  </terraintypes>
+  <tile id="0" terrain="0,0,,0"/>
+  <tile id="1" terrain="0,0,0,"/>
  </tileset>
  <layer name="floor" width="64" height="32">
   <data encoding="base64" compression="zlib">
-   eJzt1+EKgCAMRlEz3/+Z+x8NvprM5e6BEYSSow21Nc0Qx+2K/Gsj/9rIv5YhBFBdN2L2HGCV6Fo9xMA6Sh3w/7C7mXXNeQBZsP/mwZ07p6jeUM/D9Cpm+FM9Ze2L0xGI81QT/fZ8G1/nRXzHk1NUXp71WuOt9xfUZgGD
+   eJzt1t0KwCAIgFFXe/9n3u0uajrKKP0OSDfaD4gkAgAAYFeVOO0cwJPWx/QzVrucI/r9ACvm//l2n3/AH1H7Kuq7MFeG3sjwRvga/bta62ftA5s7eRT5no/ltbZytfpWfm8v7fyR/F79AywDAoQ=
   </data>
  </layer>
  <layer name="decoration" width="64" height="32">
   <data encoding="base64" compression="zlib">
-   eJzt1LEJAAAIA0Eb91/ZDUREsLlrv0mVCAAAAAAA4Et+DwBgpPvrbYNrBW/sABU=
+   eJzt0TEOgDAMBME08P8nU9Eix8iOlMyUvlCsGOOfO3ir2L7ed9Efu1Vs+tfTH7tVbPrXO71/VrZ/F/pzG3s4/f/rz2270J/bAAAAOl3JrfNN5Ht4PTSFAZ8=
+  </data>
+ </layer>
+ <layer name="guide" width="64" height="32">
+  <data encoding="base64" compression="zlib">
+   eJzt2cEJAAAIA7GC++/sxx2KkMBNcQktcwEAAAAAAAD/+X+0LeYYAA0=
   </data>
  </layer>
 </map>
