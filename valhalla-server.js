@@ -50,7 +50,7 @@ var port = process.env.PORT || 8080;
 console.log('Starting Valhalla on port '+port);
 // Multi User
 var io = require('socket.io').listen(app.listen(port, function() {
-  console.log('Welcome to Valhalla on port ' + port);
+  console.log('Odin welcomes you to Valhalla on port ' + port);
 }), {log:false});
 
 
