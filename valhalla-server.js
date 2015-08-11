@@ -6,8 +6,8 @@ var environments = {
 	},
 	dev : {
 		id:'dev',
-		client : 'http://www.tomdanvers.com/labs/valhalla/',
-		npcCount : 15
+		client : 'http://valhalla.tomdanvers.com/',
+		npcCount : 5
 	}
 }
 var environmentId = process.argv[2];
