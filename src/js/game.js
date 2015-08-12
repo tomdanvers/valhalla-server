@@ -54,8 +54,6 @@ module.exports = function(io, config, environment) {
 
     function commandsHandler(id, commands) {
 
-        console.log('commandsHandler', id, commands)
-
         var player = players.get(String(id));
 
         var commandCount = commands.data.length;
