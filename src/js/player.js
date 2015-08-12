@@ -13,6 +13,7 @@ module.exports = function(id, isNPC, config) {
             previousY: 0,
             facing: 1,
             health: 25,
+            score: 0,
             colour: Math.floor(0xFFFFFF*Math.random())
         },
         input: {

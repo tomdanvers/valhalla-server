@@ -141,6 +141,37 @@ module.exports = function(io, config, environment) {
 
     }
 
+    function getClosestTarget(player) {
+
+        var count = players.count - 1;
+
+        var target = null;
+        var targetClosest = null;
+        var distance;
+        var distanceClosest = Number.MAX_VALUE;
+        while(count > 0) {
+            target = players.get(count);
+            if (target !== player && target.isAlive) {
+                distance = distanceBetween(target, player);
+                if (distance < distanceClosest) {
+                    distanceClosest = distance;
+                    targetClosest = target;
+                }
+            }
+            count --;
+        }
+        return targetClosest;
+
+    }
+
+    function distanceBetween(playerA, playerB) {
+
+        var diffX = playerA.model.x - playerB.model.x;
+        var diffY = playerA.model.y - playerB.model.y;
+        return Math.sqrt(diffX*diffX + diffY*diffY);
+
+    }
+
     function getRandomTarget(player) {
 
         var count = players.count - 1;
@@ -171,7 +202,11 @@ module.exports = function(io, config, environment) {
     			if (player.isNPC && player.target === null && Math.random() > .99) {
 
                     // New target for this npc
-    				player.target = getRandomTarget(player);
+                    if (Math.random() > .25) {
+                        player.target = getClosestTarget(player);
+                    } else {
+    				    player.target = getRandomTarget(player);
+                    }
 
     			} else if (player.isNPC && player.target) {
 
@@ -197,10 +232,10 @@ module.exports = function(io, config, environment) {
                             player.input.space = true;
     					}
 
-                        if (diffY > 20) {
+                        if (diffY > 20 && Math.random() > .9) {
                             player.input.up = false;
                             player.input.down = true;
-                        } else if (diffY < -20) {
+                        } else if (diffY < -20 && Math.random() > .9) {
                             player.input.up = true;
                             player.input.down = false;
                         } else {
@@ -214,6 +249,10 @@ module.exports = function(io, config, environment) {
     					player.target = null;
 
     				}
+
+                    if (Math.random() > .999) {
+                        player.target = null;
+                    }
 
     			}
 
@@ -310,7 +349,8 @@ module.exports = function(io, config, environment) {
     		}else{
     			player.isAlive = true;
     			player.model.health = config.player.healthMax;
-    			player.model.x = (map.widthPx - config.player.width) * Math.random();
+                var viewportW = map.widthPx - config.player.width;
+    			player.model.x = viewportW * .1 + viewportW * .8 * Math.random();
     			player.model.y = player.height;
     		}
     	}
@@ -389,6 +429,8 @@ module.exports = function(io, config, environment) {
 
     		opponent.model.health -= 5;
     		if(opponent.model.health <= 0){
+                player.model.score ++;
+                // console.log('Warrior',player.model.id,'has score of',player.model.score);
     			death(opponent);
     		}
     	}
