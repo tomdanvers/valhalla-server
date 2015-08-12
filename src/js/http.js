@@ -3,7 +3,7 @@ var express = require('express');
 var fs = require('fs');
 var app = express();
 
-module.exports = function(config) {
+module.exports = function(config, clientURL) {
 
 	// Return the config .json or just redirect to web client
 
@@ -24,7 +24,7 @@ module.exports = function(config) {
 		    	}
 			break;
 		default:
-			response.redirect(environment.client);
+			response.redirect(clientURL);
 			break;
 		}
 	}

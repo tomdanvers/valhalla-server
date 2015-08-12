@@ -1,36 +1,45 @@
 
 module.exports = function() {
 
+    var api = {
+        current: 0,
+        previous: 0,
+        start: start
+    };
+
 	var frequency = 10;
-	
+
 	var current;
 	var previous;
-	
+
 	var onUpdateCallback;
-	var onUpdateContext;
 
 	var timeout;
 
-	function start(updateCallback, updateContext) {
+	function start(updateCallback) {
 
 		onUpdateCallback = updateCallback;
-		onUpdateContext = updateContext;
 
-		previous = new Date().getTime();
+		api.previous = new Date().getTime();
 
 		update();
 
 	}
 
 	function update() {
-		
-		current = new Date().getTime();
-		var delta = current - previous;
 
-		onUpdateCallback.call(onUpdateContext, delta/1000);
+		api.current = new Date().getTime();
+
+		var delta = api.current - api.previous;
+
+		onUpdateCallback(delta/1000);
+
+        api.previous = api.current;
 
 		setTimeout(update, frequency);
 
 	}
+
+    return api;
 
 }

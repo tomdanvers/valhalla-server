@@ -1,7 +1,7 @@
 var fs = require('fs');
 
 var HTTP = require('./src/js/http');
-
+var Game = require('./src/js/game');
 
 
 var CONFIG = {
@@ -17,25 +17,23 @@ var ENVIRONMENTS = {
 	local : {
 		id:'local',
 		client : 'http://valhalla-client/',
-		npcCount : 10
+		npcCount : 15
 	},
 	dev : {
 		id:'dev',
 		client : 'http://valhalla.tomdanvers.com/',
-		npcCount : 5
+		npcCount : 10
 	}
 }
 
 
-var environmentId = process.argv[2];
-var environment = ENVIRONMENTS[environmentId] === undefined ? ENVIRONMENTS.local : ENVIRONMENTS[environmentId];
+var ENVIRONMENT = ENVIRONMENTS[process.argv[2]] === undefined ? ENVIRONMENTS.local : ENVIRONMENTS[process.argv[2]];
 
-console.log('Valhalla environment "' + environment.id + '"');
-
+console.log('Valhalla environment "' + ENVIRONMENT.id + '"');
 
 // Handles http requests to this server
 
-var app = new HTTP(CONFIG);
+var app = new HTTP(CONFIG, ENVIRONMENT.client);
 
 // Start socket server
 
@@ -43,14 +41,11 @@ var port = process.env.PORT || 8080;
 
 console.log('Starting Valhalla on port '+port);
 
-var io = require('socket.io').listen(app.listen(port, function() {
-  console.log('Odin welcomes you to Valhalla on port ' + port);
-}), {log:false});
+var io = require('socket.io')
+    .listen(app.listen(port, function() {
+        console.log('Odin welcomes you to Valhalla on port ' + port);
+    }));
 
+// Create Game
 
-
-// Game
-
-
-
-
+var game = new Game(io, CONFIG, ENVIRONMENT);
