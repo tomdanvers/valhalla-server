@@ -9,6 +9,7 @@ module.exports = function(io, config, environment) {
 
     var players = new MappedList();
 
+    // World definition
     var world = {
         left: 0,
         right: map.widthPx,
@@ -17,14 +18,17 @@ module.exports = function(io, config, environment) {
         gravity: 2000
     };
 
-    var data = {
-       players:[]
+    // Data broadcasted to connected clients on update
+    var sharedData = {
+       players: []
     };
 
+    // Add NPCs
     for(var i = 0; i < environment.npcCount; i ++){
         playerAdd(i, true);
     }
 
+    // Start per frame updates
     var time = new Time();
     time.start(function(timeDelta) {
 
@@ -32,19 +36,22 @@ module.exports = function(io, config, environment) {
 
     });
 
-    io.sockets.on('connection', function(socket){
+    // WebSocket listeners / handlers
+    io.sockets.on('connection', connectionHandler);
 
+    function connectionHandler(socket) {
+        
         playerAdd(socket.id, false);
 
         socket.on('commands', function(commands){
-			commandsHandler(socket.id, commands);
-		});
+            commandsHandler(socket.id, commands);
+        });
 
-		socket.on('disconnect', function(){
-			disconnectionHandler(socket.id);
-		});
+        socket.on('disconnect', function(){
+            disconnectionHandler(socket.id);
+        });
 
-	});
+    }
 
     function disconnectionHandler(id) {
 
@@ -126,7 +133,7 @@ module.exports = function(io, config, environment) {
 
     	players.add(player);
 
-        data.players.push(player.model);
+        sharedData.players.push(player.model);
 
     }
 
@@ -136,8 +143,8 @@ module.exports = function(io, config, environment) {
 
         players.remove(player);
 
-    	var index = data.players.indexOf(player.model);
-    	data.players.splice(index, 1);
+    	var index = sharedData.players.indexOf(player.model);
+    	sharedData.players.splice(index, 1);
 
     }
 
@@ -297,7 +304,7 @@ module.exports = function(io, config, environment) {
     			player.left = player.model.x - player.widthHalf;
     			player.right = player.model.x + player.widthHalf;
 
-    			// INPUT Y
+    			// Input Y
     			if(player.isGrounded){
     				if(player.input.up){
     					player.velocity.y = -player.velocityMax.y;
@@ -311,10 +318,10 @@ module.exports = function(io, config, environment) {
     				}
     			}
 
-    			// VELOCITY Y
+    			// Velocity Y
     			player.velocity.y += player.acceleration.y*timeDelta;
 
-    			// POSITION Y
+    			// Position Y
     			playerY = player.model.y + player.velocity.y*timeDelta;
 
     			var collidedAtPx = collisionDetectionFloor(player, playerY);
@@ -330,9 +337,9 @@ module.exports = function(io, config, environment) {
     				player.isGrounded = true;
     			}
 
-    			// ATTACK
+    			// Attack
     			if(player.attackCooldown > 0){
-    				player.attackCooldown -= (timeDelta);
+    				player.attackCooldown -= timeDelta;
     			}else if(player.attackCooldown <= 0 && player.input.space){
     				playerAttacks(player);
     			}
@@ -346,18 +353,23 @@ module.exports = function(io, config, environment) {
     					return val;
     				}
     			}
+
     		}else{
+
     			player.isAlive = true;
     			player.model.health = config.player.healthMax;
                 var viewportW = map.widthPx - config.player.width;
     			player.model.x = viewportW * .1 + viewportW * .8 * Math.random();
     			player.model.y = player.height;
+                player.velocity.x = 0;
+                player.velocity.y = 0;
+                
     		}
     	}
 
     	io.sockets.emit('update', {
             time: time.current,
-            data: data
+            data: sharedData
         });
 
     }

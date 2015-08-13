@@ -7,4 +7,6 @@ gulp.task('watch', function () {
     ext: 'js',
     env: { 'NODE_ENV': 'development' }
   })
-})
+});
+
+gulp.task('default', ['watch']);

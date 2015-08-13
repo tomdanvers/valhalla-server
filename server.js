@@ -24,7 +24,7 @@ var ENVIRONMENTS = {
 		client : 'http://valhalla.tomdanvers.com/',
 		npcCount : 10
 	}
-}
+};
 
 
 var ENVIRONMENT = ENVIRONMENTS[process.argv[2]] === undefined ? ENVIRONMENTS.local : ENVIRONMENTS[process.argv[2]];
@@ -38,8 +38,6 @@ var app = new HTTP(CONFIG, ENVIRONMENT.client);
 // Start socket server
 
 var port = process.env.PORT || 8080;
-
-console.log('Starting Valhalla on port '+port);
 
 var io = require('socket.io')
     .listen(app.listen(port, function() {
