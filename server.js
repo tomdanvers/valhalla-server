@@ -17,7 +17,7 @@ var ENVIRONMENTS = {
 	local : {
 		id:'local',
 		client : 'http://valhalla-client/',
-		npcCount : 15
+		npcCount : 1
 	},
 	dev : {
 		id:'dev',

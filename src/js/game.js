@@ -239,10 +239,10 @@ module.exports = function(io, config, environment) {
                             player.input.space = true;
     					}
 
-                        if (diffY > 20 && Math.random() > .9) {
+                        if (diffY > 40 && player.target.isGrounded && Math.random() > .9) {
                             player.input.up = false;
                             player.input.down = true;
-                        } else if (diffY < -20 && Math.random() > .9) {
+                        } else if (diffY < -40 && player.target.isGrounded && Math.random() > .9) {
                             player.input.up = true;
                             player.input.down = false;
                         } else {
@@ -289,8 +289,10 @@ module.exports = function(io, config, environment) {
 
     			// Position X
     			playerX = player.model.x += player.velocity.x * timeDelta;
-    			playerLeft = playerX - player.widthHalf;
+    			
+                playerLeft = playerX - player.widthHalf;
     			playerRight = playerX + player.widthHalf;
+
     			if(playerLeft < world.left){
     				player.model.x = world.left + player.widthHalf;
     				player.velocity.x *= -.5;
@@ -325,8 +327,8 @@ module.exports = function(io, config, environment) {
     			playerY = player.model.y + player.velocity.y*timeDelta;
 
     			var collidedAtPx = collisionDetectionFloor(player, playerY);
-    			var collidedAtTile = Math.floor(collidedAtPx/32);
-    			if(collidedAtPx == -1 || (player.input.down && collidedAtPx/32 < 30)){
+    			var collidedAtTile = Math.floor(collidedAtPx / 32);
+    			if(collidedAtPx == -1 || (player.input.down && collidedAtPx / 32 < 30)){
     				player.model.y = playerY;
     				player.acceleration.y = world.gravity;
     				player.isGrounded = false;
@@ -363,7 +365,7 @@ module.exports = function(io, config, environment) {
     			player.model.y = player.height;
                 player.velocity.x = 0;
                 player.velocity.y = 0;
-                
+
     		}
     	}
 
