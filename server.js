@@ -7,6 +7,8 @@ require.extensions['.txt'] = function (module, filename) {
 var ASCII = require('./src/txt/ascii.txt');
 var HTTP = require('./src/js/http');
 var Game = require('./src/js/game');
+var GameModeController = require('./src/js/controller/game-mode-controller');
+var ConnectionController = require('./src/js/controller/connection-controller');
 
 
 var CONFIG = {
@@ -44,10 +46,20 @@ var port = process.env.PORT || 8080;
 
 var io = require('socket.io')
     .listen(app.listen(port, function() {
-        console.log(ASCII);
+
+        // console.log(ASCII);
         console.log('Odin welcomes you to Valhalla on port ' + port);
+
+        // Connections
+        var connectionController = new ConnectionController(io, CONFIG, ENVIRONMENT);
+
+        // Game Modes
+        var gameModeController = new GameModeController(connectionController, CONFIG, ENVIRONMENT);
+        gameModeController.next();
+
+        // Create Game
+
+        //var game = new Game(io, CONFIG, ENVIRONMENT);
+
     }));
 
-// Create Game
-
-var game = new Game(io, CONFIG, ENVIRONMENT);

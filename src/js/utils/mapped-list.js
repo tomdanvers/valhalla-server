@@ -5,7 +5,8 @@ module.exports = function() {
         add: add,
         remove: remove,
         get: get,
-        getRandom: getRandom
+        getRandom: getRandom,
+        each: each
     };
 
     var list = [];
@@ -44,6 +45,12 @@ module.exports = function() {
 
         return list[Math.floor(api.count * Math.random())];
 
+    }
+
+    function each(callback) {
+        for (var i = 0; i < api.count; i++) {
+            callback(list[i]);
+        }
     }
 
     return api;
