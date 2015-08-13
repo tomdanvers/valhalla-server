@@ -40,7 +40,7 @@ module.exports = function(io, config, environment) {
     io.sockets.on('connection', connectionHandler);
 
     function connectionHandler(socket) {
-        
+
         playerAdd(socket.id, false);
 
         socket.on('commands', function(commands){
@@ -206,7 +206,7 @@ module.exports = function(io, config, environment) {
             if(player.isAlive){
 
     			// Target
-    			if (player.isNPC && player.target === null && Math.random() > .99) {
+    			if (player.model.isNPC && player.target === null && Math.random() > .99) {
 
                     // New target for this npc
                     if (Math.random() > .25) {
@@ -215,7 +215,7 @@ module.exports = function(io, config, environment) {
     				    player.target = getRandomTarget(player);
                     }
 
-    			} else if (player.isNPC && player.target) {
+    			} else if (player.model.isNPC && player.target) {
 
     				if (player.target.isAlive) {
 
@@ -225,11 +225,11 @@ module.exports = function(io, config, environment) {
 
                         // console.log(diffX)
 
-    					if (diffX < -25) {
+    					if (diffX < -35) {
     						player.input.left = true;
     						player.input.right = false;
     						player.input.space = false;
-                        } else if (diffX > 25) {
+                        } else if (diffX > 35) {
                             player.input.left = false;
                             player.input.right = true;
                             player.input.space = false;
@@ -289,7 +289,7 @@ module.exports = function(io, config, environment) {
 
     			// Position X
     			playerX = player.model.x += player.velocity.x * timeDelta;
-    			
+
                 playerLeft = playerX - player.widthHalf;
     			playerRight = playerX + player.widthHalf;
 
@@ -358,13 +358,7 @@ module.exports = function(io, config, environment) {
 
     		}else{
 
-    			player.isAlive = true;
-    			player.model.health = config.player.healthMax;
-                var viewportW = map.widthPx - config.player.width;
-    			player.model.x = viewportW * .1 + viewportW * .8 * Math.random();
-    			player.model.y = player.height;
-                player.velocity.x = 0;
-                player.velocity.y = 0;
+    			respawn(player);
 
     		}
     	}
@@ -374,6 +368,16 @@ module.exports = function(io, config, environment) {
             data: sharedData
         });
 
+    }
+
+    function respawn(player) {
+        player.isAlive = true;
+        player.model.health = config.player.healthMax;
+        var viewportW = map.widthPx - config.player.width;
+        player.model.x = viewportW * .1 + viewportW * .8 * Math.random();
+        player.model.y = -player.height;
+        player.velocity.x = 0;
+        player.velocity.y = 0;
     }
 
 

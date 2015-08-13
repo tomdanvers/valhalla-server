@@ -14,6 +14,7 @@ module.exports = function(id, isNPC, config) {
             facing: 1,
             health: 25,
             score: 0,
+            isNPC: isNPC,
             colour: Math.floor(0xFFFFFF*Math.random())
         },
         input: {
@@ -43,7 +44,6 @@ module.exports = function(id, isNPC, config) {
         height: config.player.height,
         isGrounded: false,
         isAlive: true,
-        isNPC: isNPC,
         attackCooldown: 0,
         target: null
     };
