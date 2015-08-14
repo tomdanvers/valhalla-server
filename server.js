@@ -47,7 +47,7 @@ var port = process.env.PORT || 8080;
 var io = require('socket.io')
     .listen(app.listen(port, function() {
 
-        // console.log(ASCII);
+        console.log(ASCII);
         console.log('Odin welcomes you to Valhalla on port ' + port);
 
         // Connections

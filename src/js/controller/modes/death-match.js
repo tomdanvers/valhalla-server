@@ -1,4 +1,4 @@
-module.exports = function(connectionController) {
+module.exports = function(connectionController, level) {
 
     var api = {
         start: start,
@@ -8,13 +8,17 @@ module.exports = function(connectionController) {
     var doneCallback = null;
     var state;
 
-    connectionController.connection(function(socket) {
+    // Win Criteria
 
-        socket.emit('mode:state:current', {
-            mode: 'deathmatch',
-            state: state
-        });
+    var maxScore = 10;
 
+    level.onPlayerScored(function(player, score) {
+
+        if (score >= maxScore) {
+            level.onPlayerScored(null);
+            console.log('DeathMatch: Player', player.id,'won with score of', score);
+            endMatch();
+        }
     });
 
     function start() {
@@ -29,13 +33,24 @@ module.exports = function(connectionController) {
 
         state = newState;
 
+        // Let game objects know...
+        connectionController.changeState(state);
+
+        level.changeState(state);
+
+        // Let clients know ...
+
         var payload = {
             mode: 'deathmatch',
             state: state
         };
 
-        for (var key in data) {
-            payload[key] = data[key];
+        // ... and pass through state specific data ...
+
+        if (data !== undefined) {
+            for (var key in data) {
+                payload[key] = data[key];
+            }
         }
 
         connectionController.emit('mode:state:change', payload);
@@ -44,19 +59,48 @@ module.exports = function(connectionController) {
 
     function intro() {
 
-        var length = 3000;
+        var duration = 3000;
 
-        changeState('intro', {length: length});
+        setTimeout(beginMatch, duration);
 
-        setTimeout(begin, length);
+        changeState('intro', {duration: duration});
+
+    }
+
+    function beginMatch() {
+
+        changeState('match');
 
     }
 
-    function begin() {
+    function endMatch() {
 
-        changeState('begin');
+        results();
 
     }
+
+    function results() {
+        
+        var duration = 3000;
+
+        setTimeout(complete, duration);
+
+        changeState('results', {duration: duration});
+
+    }
+
+    function complete() {
+        
+        if (doneCallback) {
+            level.destroy();
+            doneCallback();
+        } else {
+            console.log('ERROR: Game Mode DeathMatch has no done callback.');
+        }
+
+    }
+
+    // Chaining...
 
     function done(callback) {
 

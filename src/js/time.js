@@ -4,7 +4,8 @@ module.exports = function() {
     var api = {
         current: 0,
         previous: 0,
-        start: start
+        start: start,
+        stop: stop
     };
 
 	var frequency = 10;
@@ -36,8 +37,14 @@ module.exports = function() {
 
         api.previous = api.current;
 
-		setTimeout(update, frequency);
+		timeout = setTimeout(update, frequency);
 
+	}
+
+	function stop() {
+
+		clearTimeout(timeout);
+		
 	}
 
     return api;

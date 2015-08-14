@@ -3,7 +3,17 @@ var Time = require('./time');
 var MappedList = require('./utils/mapped-list');
 var Player = require('./player');
 
-module.exports = function(io, config, environment) {
+module.exports = function(connectionController, config, environment) {
+
+    var api = {
+        changeState: changeState,
+        onPlayerScored: onPlayerScored,
+        destroy: destroy
+    };
+
+    var onPlayerScoredCallback = null;
+
+    var state;
 
     var map = new Map(config.map);
 
@@ -37,9 +47,30 @@ module.exports = function(io, config, environment) {
     });
 
     // WebSocket listeners / handlers
-    io.sockets.on('connection', connectionHandler);
+    
+    // Existing Connections
+    connectionController.input.each(function(socket) {
+        connectionHandler(socket);
+    });
+
+    connectionController.both.each(function(socket) {
+        connectionHandler(socket);
+    });
+
+    // New Connections
+    connectionController.connection(function(socket) {
+        
+        if (socket.type === 'both' || socket.type === 'input') {
+
+            connectionHandler(socket);
+
+        }
+
+    });
 
     function connectionHandler(socket) {
+
+        console.log('Game.connectionHandler', socket.id);
 
         playerAdd(socket.id, false);
 
@@ -47,15 +78,25 @@ module.exports = function(io, config, environment) {
             commandsHandler(socket.id, commands);
         });
 
-        socket.on('disconnect', function(){
-            disconnectionHandler(socket.id);
-        });
-
     }
 
-    function disconnectionHandler(id) {
+    connectionController.disconnection(function(socket) {
 
-    	playerRemove(id);
+        if (socket.type === 'both' || socket.type === 'input') {
+
+            disconnectionHandler(socket);
+
+        }
+
+    });
+
+    function disconnectionHandler(socket) {
+
+        console.log('Game.disconnectionHandler', socket.id);
+
+        playerRemove(socket.id);
+
+        // socket.off('commands');
 
     }
 
@@ -139,12 +180,18 @@ module.exports = function(io, config, environment) {
 
     function playerRemove(id) {
 
-        var player = players.get(id);
+        console.log('Game.remove(',id,')');
 
-        players.remove(player);
+        if (players.has(id)) {
 
-    	var index = sharedData.players.indexOf(player.model);
-    	sharedData.players.splice(index, 1);
+            var player = players.get(id);
+
+            players.remove(player);
+
+        	var index = sharedData.players.indexOf(player.model);
+        	sharedData.players.splice(index, 1);
+            
+        }
 
     }
 
@@ -199,174 +246,178 @@ module.exports = function(io, config, environment) {
 
     function update(timeDelta) {
 
-        for (var i = players.count - 1; i >= 0; i--) {
+        if (state === 'match') {
 
-            var player = players.get(i);
+            for (var i = players.count - 1; i >= 0; i--) {
 
-            if(player.isAlive){
+                var player = players.get(i);
 
-    			// Target
-    			if (player.model.isNPC && player.target === null && Math.random() > .99) {
+                if(player.isAlive){
 
-                    // New target for this npc
-                    if (Math.random() > .25) {
-                        player.target = getClosestTarget(player);
-                    } else {
-    				    player.target = getRandomTarget(player);
-                    }
+        			// Target
+        			if (player.model.isNPC && player.target === null && Math.random() > .99) {
 
-    			} else if (player.model.isNPC && player.target) {
-
-    				if (player.target.isAlive) {
-
-                        // Follow target
-                        var diffX = player.target.model.x - player.model.x;
-    					var diffY = player.target.model.y - player.model.y;
-
-                        // console.log(diffX)
-
-    					if (diffX < -35) {
-    						player.input.left = true;
-    						player.input.right = false;
-    						player.input.space = false;
-                        } else if (diffX > 35) {
-                            player.input.left = false;
-                            player.input.right = true;
-                            player.input.space = false;
+                        // New target for this npc
+                        if (Math.random() > .25) {
+                            player.target = getClosestTarget(player);
                         } else {
-                            player.input.left = false;
-                            player.input.right = false;
-                            player.input.space = true;
-    					}
-
-                        if (diffY > 40 && player.target.isGrounded && Math.random() > .9) {
-                            player.input.up = false;
-                            player.input.down = true;
-                        } else if (diffY < -40 && player.target.isGrounded && Math.random() > .9) {
-                            player.input.up = true;
-                            player.input.down = false;
-                        } else {
-                            player.input.up = false;
-                            player.input.down = false;
+        				    player.target = getRandomTarget(player);
                         }
 
-    				} else {
+        			} else if (player.model.isNPC && player.target) {
 
-                        // Clear target
-    					player.target = null;
+        				if (player.target.isAlive) {
 
-    				}
+                            // Follow target
+                            var diffX = player.target.model.x - player.model.x;
+        					var diffY = player.target.model.y - player.model.y;
 
-                    if (Math.random() > .999) {
-                        player.target = null;
-                    }
+                            // console.log(diffX)
 
-    			}
+        					if (diffX < -35) {
+        						player.input.left = true;
+        						player.input.right = false;
+        						player.input.space = false;
+                            } else if (diffX > 35) {
+                                player.input.left = false;
+                                player.input.right = true;
+                                player.input.space = false;
+                            } else {
+                                player.input.left = false;
+                                player.input.right = false;
+                                player.input.space = true;
+        					}
 
-    			// Input X
-    			var accelMultiplier = player.isGrounded ? 1 : .25;
-    			if (player.input.left && player.velocity.x > -player.velocityMax.x) {
-    				player.acceleration.x = -player.accelerationMax.x * accelMultiplier;
-    			} else if(player.input.right && player.velocity.x < player.velocityMax.x) {
-    				player.acceleration.x = player.accelerationMax.x * accelMultiplier;
-    			} else{
-    				player.acceleration.x = 0;
-    				if(player.isGrounded){
-    					player.velocity.x *=.7;
-    				}else{
-    					player.velocity.x *=.99;
-    				}
-    			}
+                            if (diffY > 40 && player.target.isGrounded && Math.random() > .9) {
+                                player.input.up = false;
+                                player.input.down = true;
+                            } else if (diffY < -40 && player.target.isGrounded && Math.random() > .9) {
+                                player.input.up = true;
+                                player.input.down = false;
+                            } else {
+                                player.input.up = false;
+                                player.input.down = false;
+                            }
 
-    			if(player.input.left){
-    				player.model.facing = -1;
-    			}else if(player.input.right){
-    				player.model.facing = 1;
-    			}
+        				} else {
 
-    			// Velocity X
-    			player.velocity.x += player.acceleration.x * timeDelta;
+                            // Clear target
+        					player.target = null;
 
-    			// Position X
-    			playerX = player.model.x += player.velocity.x * timeDelta;
+        				}
 
-                playerLeft = playerX - player.widthHalf;
-    			playerRight = playerX + player.widthHalf;
+                        if (Math.random() > .999) {
+                            player.target = null;
+                        }
 
-    			if(playerLeft < world.left){
-    				player.model.x = world.left + player.widthHalf;
-    				player.velocity.x *= -.5;
-    			}else if(playerRight > world.right){
-    				player.model.x = world.right - player.widthHalf;
-    				player.velocity.x *= -.5;
-    			}else{
-    				player.model.x = playerX;
-    			}
+        			}
 
-    			player.left = player.model.x - player.widthHalf;
-    			player.right = player.model.x + player.widthHalf;
+        			// Input X
+        			var accelMultiplier = player.isGrounded ? 1 : .25;
+        			if (player.input.left && player.velocity.x > -player.velocityMax.x) {
+        				player.acceleration.x = -player.accelerationMax.x * accelMultiplier;
+        			} else if(player.input.right && player.velocity.x < player.velocityMax.x) {
+        				player.acceleration.x = player.accelerationMax.x * accelMultiplier;
+        			} else{
+        				player.acceleration.x = 0;
+        				if(player.isGrounded){
+        					player.velocity.x *=.7;
+        				}else{
+        					player.velocity.x *=.99;
+        				}
+        			}
 
-    			// Input Y
-    			if(player.isGrounded){
-    				if(player.input.up){
-    					player.velocity.y = -player.velocityMax.y;
-    					player.acceleration.y = world.gravity;
-    					player.isGrounded = false;
-    				}
+        			if(player.input.left){
+        				player.model.facing = -1;
+        			}else if(player.input.right){
+        				player.model.facing = 1;
+        			}
 
-    				if(player.input.down){
-    					player.acceleration.y = world.gravity;
-    					player.isGrounded = false;
-    				}
-    			}
+        			// Velocity X
+        			player.velocity.x += player.acceleration.x * timeDelta;
 
-    			// Velocity Y
-    			player.velocity.y += player.acceleration.y*timeDelta;
+        			// Position X
+        			playerX = player.model.x += player.velocity.x * timeDelta;
 
-    			// Position Y
-    			playerY = player.model.y + player.velocity.y*timeDelta;
+                    playerLeft = playerX - player.widthHalf;
+        			playerRight = playerX + player.widthHalf;
 
-    			var collidedAtPx = collisionDetectionFloor(player, playerY);
-    			var collidedAtTile = Math.floor(collidedAtPx / 32);
-    			if(collidedAtPx == -1 || (player.input.down && collidedAtPx / 32 < 30)){
-    				player.model.y = playerY;
-    				player.acceleration.y = world.gravity;
-    				player.isGrounded = false;
-    			}else{
-    				player.model.y = collidedAtPx;
-    				player.velocity.y = player.acceleration.y = 0;
-    				player.model.levelY = player.model.y;
-    				player.isGrounded = true;
-    			}
+        			if(playerLeft < world.left){
+        				player.model.x = world.left + player.widthHalf;
+        				player.velocity.x *= -.5;
+        			}else if(playerRight > world.right){
+        				player.model.x = world.right - player.widthHalf;
+        				player.velocity.x *= -.5;
+        			}else{
+        				player.model.x = playerX;
+        			}
 
-    			// Attack
-    			if(player.attackCooldown > 0){
-    				player.attackCooldown -= timeDelta;
-    			}else if(player.attackCooldown <= 0 && player.input.space){
-    				playerAttacks(player);
-    			}
+        			player.left = player.model.x - player.widthHalf;
+        			player.right = player.model.x + player.widthHalf;
 
-    			function constrain(val, maxVal) {
-    				if(val > maxVal){
-    					return maxVal;
-    				}else if(val < -maxVal){
-    					return -maxVal;
-    				}else{
-    					return val;
-    				}
-    			}
+        			// Input Y
+        			if(player.isGrounded){
+        				if(player.input.up){
+        					player.velocity.y = -player.velocityMax.y;
+        					player.acceleration.y = world.gravity;
+        					player.isGrounded = false;
+        				}
 
-    		}else{
+        				if(player.input.down){
+        					player.acceleration.y = world.gravity;
+        					player.isGrounded = false;
+        				}
+        			}
 
-    			respawn(player);
+        			// Velocity Y
+        			player.velocity.y += player.acceleration.y*timeDelta;
 
-    		}
-    	}
+        			// Position Y
+        			playerY = player.model.y + player.velocity.y*timeDelta;
 
-    	io.sockets.emit('update', {
-            time: time.current,
-            data: sharedData
-        });
+        			var collidedAtPx = collisionDetectionFloor(player, playerY);
+        			var collidedAtTile = Math.floor(collidedAtPx / 32);
+        			if(collidedAtPx == -1 || (player.input.down && collidedAtPx / 32 < 30)){
+        				player.model.y = playerY;
+        				player.acceleration.y = world.gravity;
+        				player.isGrounded = false;
+        			}else{
+        				player.model.y = collidedAtPx;
+        				player.velocity.y = player.acceleration.y = 0;
+        				player.model.levelY = player.model.y;
+        				player.isGrounded = true;
+        			}
+
+        			// Attack
+        			if(player.attackCooldown > 0){
+        				player.attackCooldown -= timeDelta;
+        			}else if(player.attackCooldown <= 0 && player.input.space){
+        				playerAttacks(player);
+        			}
+
+        			function constrain(val, maxVal) {
+        				if(val > maxVal){
+        					return maxVal;
+        				}else if(val < -maxVal){
+        					return -maxVal;
+        				}else{
+        					return val;
+        				}
+        			}
+
+        		}else{
+
+        			respawn(player);
+
+        		}
+        	}          
+
+            connectionController.emit('update', {
+                time: time.current,
+                data: sharedData
+            });
+            
+        }
 
     }
 
@@ -450,11 +501,52 @@ module.exports = function(io, config, environment) {
                 player.model.score ++;
                 // console.log('Warrior',player.model.id,'has score of',player.model.score);
     			death(opponent);
+
+                playerScored(player, player.model.score);
     		}
     	}
+    }
+
+    function playerScored(player, score) {
+        if (onPlayerScoredCallback) {
+            onPlayerScoredCallback(player, score);
+        }
     }
 
     function death(player) {
         player.isAlive = false;
     }
+
+    function changeState(newState) {
+        
+        if (newState === state) {
+            return;
+        }
+
+        state = newState;
+
+        switch(state) {
+            case 'intro':
+                players.each(function(player) {
+                    player.model.score = 0;
+                    respawn(player);
+                });
+                break;
+            case 'match':
+                break;
+        }
+    }
+
+    function onPlayerScored(callback) {
+        onPlayerScoredCallback = callback;
+    }
+
+    function destroy() {
+        time.stop();
+
+        connectionController.connection(null);
+        connectionController.disconnection(null);
+    }
+
+    return api;
 }

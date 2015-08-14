@@ -5,21 +5,29 @@ var MappedList = require('../utils/mapped-list');
 
 module.exports = function(io, CONFIG, ENVIRONMENT) {
 
-    var api = {
-        emit: emit,
-        connection: connection
-    };
 
     var TYPE_INPUT = new MappedList();
     var TYPE_SCREEN = new MappedList();
     var TYPE_BOTH = new MappedList();
 
     var connectionCallback = null;
+    var disconnectionCallback = null;
+    var state = null;
 
     var typesMap = {
         'screen': TYPE_SCREEN,
         'input': TYPE_INPUT,
         'both': TYPE_BOTH
+    };
+    
+    var api = {
+        emit: emit,
+        connection: connection,
+        disconnection: disconnection,
+        changeState: changeState,
+        input: TYPE_INPUT,
+        both: TYPE_BOTH,
+        screen: TYPE_SCREEN
     };
 
     io.sockets.on('connection', connectionHandler);
@@ -34,12 +42,11 @@ module.exports = function(io, CONFIG, ENVIRONMENT) {
         // ... and get it back...
         socket.on('handshake', handshakeHandler);
 
-        // Handle disconnections
-        socket.on('disconnect', disconnectionHandler);
-
     }
 
     function handshakeHandler(data) {
+
+        //this.off('handshake', handshakeHandler);
 
         console.log('CC.handshakeHandler(', this.id, data.type, ')');
 
@@ -47,19 +54,30 @@ module.exports = function(io, CONFIG, ENVIRONMENT) {
         this.type = data.type;
         type.add(this);
 
-        this.emit('connected');
+        this.emit('connected', {state:state});
 
         if (connectionCallback) {
             connectionCallback(this);
         }
+        
+        // Handle disconnections
+        this.on('disconnect', disconnectionHandler);
+
     }
 
     function disconnectionHandler() {
 
         console.log('CC.disconnectionHandler(', this.id, this.type, ')');
 
+        //this.off('disconnect', disconnectionHandler);
+
         var type = typesMap[this.type];
+
         type.remove(this);
+
+        if (disconnectionCallback) {
+            disconnectionCallback(this);
+        }
 
     }
 
@@ -80,6 +98,18 @@ module.exports = function(io, CONFIG, ENVIRONMENT) {
 
     function connection(callback) {
         connectionCallback = callback;
+
+        return api;
+    }
+
+    function disconnection(callback) {
+        disconnectionCallback = callback;
+
+        return api;
+    }
+
+    function changeState(newState) {
+        state = newState;
     }
 
 

@@ -4,6 +4,7 @@ module.exports = function() {
         count: 0,
         add: add,
         remove: remove,
+        has: has,
         get: get,
         getRandom: getRandom,
         each: each
@@ -23,13 +24,23 @@ module.exports = function() {
 
     function remove(item) {
 
-        delete map[item.id];
+        if (item === undefined) {
+            console.warn('Removing an item that doesn\'t exist');
+        } else {
 
-        var index = list.indexOf(item);
-        list.splice(index, 1);
+            delete map[item.id];
 
-        api.count = list.length;
+            var index = list.indexOf(item);
+            list.splice(index, 1);
 
+            api.count = list.length;
+
+        }
+
+    }
+
+    function has(id) {
+        return map[id] !== undefined;
     }
 
     function get(val) {
