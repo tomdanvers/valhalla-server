@@ -1,9 +1,10 @@
-module.exports = function(id, isNPC, config) {
+module.exports = function(id, character, isNPC, config) {
 
     var pixelsPerMetre = 32;
 
     var api = {
         id: id,
+        character: character,
         model: {
             id: id,
             x: 0,
@@ -14,6 +15,7 @@ module.exports = function(id, isNPC, config) {
             facing: 1,
             health: 25,
             score: 0,
+            name: character.name,
             isNPC: isNPC,
             colour: Math.floor(0xFFFFFF*Math.random())
         },

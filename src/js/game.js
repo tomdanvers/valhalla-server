@@ -1,7 +1,9 @@
 var Map = require('./map');
 var Time = require('./time');
-var MappedList = require('./utils/mapped-list');
 var Player = require('./player');
+
+var CharacterUtils = require('./utils/character-utils');
+var MappedList = require('./utils/mapped-list');
 
 module.exports = function(connectionController, config, environment) {
 
@@ -35,7 +37,7 @@ module.exports = function(connectionController, config, environment) {
 
     // Add NPCs
     for(var i = 0; i < environment.npcCount; i ++){
-        playerAdd(i, true);
+        playerAdd(i, CharacterUtils.getRandomCharacter(), true);
     }
 
     // Start per frame updates
@@ -47,7 +49,7 @@ module.exports = function(connectionController, config, environment) {
     });
 
     // WebSocket listeners / handlers
-    
+
     // Existing Connections
     connectionController.input.each(function(socket) {
         connectionHandler(socket);
@@ -59,7 +61,7 @@ module.exports = function(connectionController, config, environment) {
 
     // New Connections
     connectionController.connection(function(socket) {
-        
+
         if (socket.type === 'both' || socket.type === 'input') {
 
             connectionHandler(socket);
@@ -70,9 +72,9 @@ module.exports = function(connectionController, config, environment) {
 
     function connectionHandler(socket) {
 
-        console.log('Game.connectionHandler', socket.id);
+        // console.log('Game.connectionHandler', socket.id);
 
-        playerAdd(socket.id, false);
+        playerAdd(socket.id, socket.character, false);
 
         socket.on('commands', function(commands){
             commandsHandler(socket.id, commands);
@@ -92,7 +94,7 @@ module.exports = function(connectionController, config, environment) {
 
     function disconnectionHandler(socket) {
 
-        console.log('Game.disconnectionHandler', socket.id);
+        // console.log('Game.disconnectionHandler', socket.id);
 
         playerRemove(socket.id);
 
@@ -166,9 +168,9 @@ module.exports = function(connectionController, config, environment) {
     	}
     };
 
-    function playerAdd(id, npc) {
+    function playerAdd(id, character, isNPC) {
 
-    	var player = new Player(id, npc, config);
+    	var player = new Player(id, character, isNPC, config);
     	player.model.x = (map.widthPx - config.player.width) * Math.random();
     	player.model.y = player.height;
 
@@ -180,7 +182,7 @@ module.exports = function(connectionController, config, environment) {
 
     function playerRemove(id) {
 
-        console.log('Game.remove(',id,')');
+        // console.log('Game.remove(',id,')');
 
         if (players.has(id)) {
 
@@ -190,7 +192,7 @@ module.exports = function(connectionController, config, environment) {
 
         	var index = sharedData.players.indexOf(player.model);
         	sharedData.players.splice(index, 1);
-            
+
         }
 
     }
@@ -410,13 +412,13 @@ module.exports = function(connectionController, config, environment) {
         			respawn(player);
 
         		}
-        	}          
+        	}
 
             connectionController.emit('update', {
                 time: time.current,
                 data: sharedData
             });
-            
+
         }
 
     }
@@ -518,7 +520,7 @@ module.exports = function(connectionController, config, environment) {
     }
 
     function changeState(newState) {
-        
+
         if (newState === state) {
             return;
         }

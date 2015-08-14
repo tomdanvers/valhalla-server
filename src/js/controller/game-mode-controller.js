@@ -13,8 +13,6 @@ module.exports = function(connectionController, CONFIG, ENVIRONMENT) {
 
     function next() {
 
-        console.log('GameModeController.next()');
-
         var level = new Game(connectionController, CONFIG, ENVIRONMENT);
 
         var mode = new getRandom()(connectionController, level)

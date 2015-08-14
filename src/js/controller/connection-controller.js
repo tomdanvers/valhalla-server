@@ -1,6 +1,7 @@
 var DeathMatch = require('./modes/death-match');
 var TeamDeathMatch = require('./modes/team-death-match');
 
+var CharacterUtils = require('../utils/character-utils');
 var MappedList = require('../utils/mapped-list');
 
 module.exports = function(io, CONFIG, ENVIRONMENT) {
@@ -19,7 +20,7 @@ module.exports = function(io, CONFIG, ENVIRONMENT) {
         'input': TYPE_INPUT,
         'both': TYPE_BOTH
     };
-    
+
     var api = {
         emit: emit,
         connection: connection,
@@ -34,7 +35,7 @@ module.exports = function(io, CONFIG, ENVIRONMENT) {
 
     function connectionHandler(socket) {
 
-        console.log('CC.connectionHandler(', socket.id, ')');
+        // console.log('CC.connectionHandler(', socket.id, ')');
 
         // Send initial handshake...
         socket.emit('handshake');
@@ -48,18 +49,23 @@ module.exports = function(io, CONFIG, ENVIRONMENT) {
 
         //this.off('handshake', handshakeHandler);
 
-        console.log('CC.handshakeHandler(', this.id, data.type, ')');
 
         var type = typesMap[data.type];
         this.type = data.type;
+        this.character = CharacterUtils.getRandomCharacter();
         type.add(this);
 
-        this.emit('connected', {state:state});
+        // console.log('CC.handshakeHandler(', this.id, data.type, this.character.name, ')');
+
+        this.emit('connected', {
+            state: state,
+            character: this.character
+        });
 
         if (connectionCallback) {
             connectionCallback(this);
         }
-        
+
         // Handle disconnections
         this.on('disconnect', disconnectionHandler);
 
@@ -67,7 +73,7 @@ module.exports = function(io, CONFIG, ENVIRONMENT) {
 
     function disconnectionHandler() {
 
-        console.log('CC.disconnectionHandler(', this.id, this.type, ')');
+        // console.log('CC.disconnectionHandler(', this.id, this.type, ')');
 
         //this.off('disconnect', disconnectionHandler);
 

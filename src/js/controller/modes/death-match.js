@@ -16,7 +16,7 @@ module.exports = function(connectionController, level) {
 
         if (score >= maxScore) {
             level.onPlayerScored(null);
-            console.log('DeathMatch: Player', player.id,'won with score of', score);
+            console.log('DeathMatch: Player', player.character.name,'won with score of', score);
             endMatch();
         }
     });
@@ -80,7 +80,7 @@ module.exports = function(connectionController, level) {
     }
 
     function results() {
-        
+
         var duration = 3000;
 
         setTimeout(complete, duration);
@@ -90,7 +90,7 @@ module.exports = function(connectionController, level) {
     }
 
     function complete() {
-        
+
         if (doneCallback) {
             level.destroy();
             doneCallback();
