@@ -10,14 +10,17 @@ module.exports = function(connectionController, level) {
 
     // Win Criteria
 
-    var maxScore = 10;
+    var maxScore = 15;
 
     level.onPlayerScored(function(player, score) {
 
         if (score >= maxScore) {
             level.onPlayerScored(null);
             console.log('DeathMatch: Player', player.character.name,'won with score of', score);
-            endMatch();
+            endMatch({
+                winner: player.character.name,
+                score: score
+            });
         }
     });
 
@@ -73,19 +76,19 @@ module.exports = function(connectionController, level) {
 
     }
 
-    function endMatch() {
+    function endMatch(data) {
 
-        results();
+        results(data);
 
     }
 
-    function results() {
+    function results(data) {
 
         var duration = 3000;
 
         setTimeout(complete, duration);
 
-        changeState('results', {duration: duration});
+        changeState('results', data);
 
     }
 
