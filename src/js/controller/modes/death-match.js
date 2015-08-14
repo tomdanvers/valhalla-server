@@ -10,7 +10,7 @@ module.exports = function(connectionController, level) {
 
     // Win Criteria
 
-    var maxScore = 15;
+    var maxScore = 10;
 
     level.onPlayerScored(function(player, score) {
 
@@ -84,7 +84,7 @@ module.exports = function(connectionController, level) {
 
     function results(data) {
 
-        var duration = 3000;
+        var duration = 4500;
 
         setTimeout(complete, duration);
 
