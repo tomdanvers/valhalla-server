@@ -60,6 +60,8 @@ module.exports = function(connectionController, level, environment) {
 
     function start() {
 
+        console.log('TeamDeathMatch.start()');
+
         intro();
 
         return api;

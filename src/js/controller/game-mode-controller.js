@@ -6,6 +6,8 @@ var Level = require('../level');
 module.exports = function(connectionController, CONFIG, ENVIRONMENT) {
 
     var MODES = [DeathMatch, TeamDeathMatch];
+    var RANDOM = false;
+    var SEQUENTIAL_COUNT = 0;
 
     var api = {
         next: next
@@ -15,14 +17,30 @@ module.exports = function(connectionController, CONFIG, ENVIRONMENT) {
 
         var level = new Level(connectionController, CONFIG);
 
-        var mode = new getRandom()(connectionController, level, ENVIRONMENT)
+        var mode = new getMode()(connectionController, level, ENVIRONMENT)
             .start()
             .done(next);
 
     }
 
+    function getMode() {
+        if (RANDOM) {
+            return getRandom();
+        } else {
+            return getSequential();
+        }
+    }
+
     function getRandom() {
         return MODES[Math.floor(Math.random() * MODES.length)];
+    }
+
+    function getSequential() {
+        SEQUENTIAL_COUNT++;
+        if (SEQUENTIAL_COUNT === Number.MAX_VALUE - 1) {
+            SEQUENTIAL_COUNT = 0;
+        }
+        return MODES[SEQUENTIAL_COUNT % MODES.length];
     }
 
 

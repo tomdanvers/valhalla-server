@@ -59,6 +59,8 @@ module.exports = function(connectionController, level, environment) {
 
     function start() {
 
+        console.log('DeathMatch.start()');
+
         intro();
 
         return api;
