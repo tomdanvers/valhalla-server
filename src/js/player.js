@@ -5,6 +5,7 @@ module.exports = function(id, character, isNPC, config) {
     var api = {
         id: id,
         character: character,
+        alliance: null,
         model: {
             id: id,
             x: 0,

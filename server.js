@@ -6,7 +6,6 @@ require.extensions['.txt'] = function (module, filename) {
 
 var ASCII = require('./src/txt/ascii.txt');
 var HTTP = require('./src/js/http');
-var Game = require('./src/js/game');
 var GameModeController = require('./src/js/controller/game-mode-controller');
 var ConnectionController = require('./src/js/controller/connection-controller');
 
@@ -56,10 +55,6 @@ var io = require('socket.io')
         // Game Modes
         var gameModeController = new GameModeController(connectionController, CONFIG, ENVIRONMENT);
         gameModeController.next();
-
-        // Create Game
-
-        //var game = new Game(io, CONFIG, ENVIRONMENT);
 
     }));
 

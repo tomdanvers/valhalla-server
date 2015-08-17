@@ -5,8 +5,8 @@ module.exports = function(connectionController, level) {
         done: done
     };
 
-    var doneCallback = null;
     var state;
+    var doneCallback = null;
 
     // Win Criteria
 
@@ -16,29 +16,22 @@ module.exports = function(connectionController, level) {
 
         if (score >= maxScore) {
             level.onPlayerScored(null);
-            console.log('DeathMatch: Player', player.character.name,'won with score of', score);
+            console.log('DeathMatch: Player', player.character.name, 'won with score of', score);
             endMatch({
                 winner: player.character.name,
                 score: score
             });
         }
+
     });
-
-    function start() {
-
-        intro();
-
-        return api;
-
-    }
 
     function changeState(newState, data) {
 
         state = newState;
 
         // Let game objects know...
-        connectionController.changeState(state);
 
+        connectionController.changeState(state);
         level.changeState(state);
 
         // Let clients know ...
@@ -60,13 +53,19 @@ module.exports = function(connectionController, level) {
 
     }
 
+    function start() {
+
+        intro();
+
+        return api;
+
+    }
+
     function intro() {
 
-        var duration = 3000;
+        changeState('intro');
 
-        setTimeout(beginMatch, duration);
-
-        changeState('intro', {duration: duration});
+        setTimeout(beginMatch, 3000);
 
     }
 
@@ -78,27 +77,23 @@ module.exports = function(connectionController, level) {
 
     function endMatch(data) {
 
-        results(data);
-
-    }
-
-    function results(data) {
-
-        var duration = 4500;
-
-        setTimeout(complete, duration);
-
         changeState('results', data);
+
+        setTimeout(complete, 4500);
 
     }
 
     function complete() {
 
         if (doneCallback) {
+
             level.destroy();
             doneCallback();
+
         } else {
+
             console.log('ERROR: Game Mode DeathMatch has no done callback.');
+
         }
 
     }

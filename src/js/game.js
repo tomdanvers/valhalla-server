@@ -10,10 +10,12 @@ module.exports = function(connectionController, config, environment) {
     var api = {
         changeState: changeState,
         onPlayerScored: onPlayerScored,
+        onAllianceScored: onAllianceScored,
         destroy: destroy
     };
 
     var onPlayerScoredCallback = null;
+    var onAllianceScoredCallback = null;
 
     var state;
 
@@ -500,11 +502,16 @@ module.exports = function(connectionController, config, environment) {
 
     		opponent.model.health -= 5;
     		if(opponent.model.health <= 0){
-                player.model.score ++;
                 // console.log('Warrior',player.model.id,'has score of',player.model.score);
-    			death(opponent);
+                death(opponent);
 
+                player.model.score ++;
                 playerScored(player, player.model.score);
+
+                if (player.alliance) {
+                    player.alliance.score ++;
+                    allianceScored(player.alliance, player.alliance.score);
+                }
     		}
     	}
     }
@@ -512,6 +519,12 @@ module.exports = function(connectionController, config, environment) {
     function playerScored(player, score) {
         if (onPlayerScoredCallback) {
             onPlayerScoredCallback(player, score);
+        }
+    }
+
+    function allianceScored(alliance, score) {
+        if (onAllianceScoredCallback) {
+            onAllianceScoredCallback(player, score);
         }
     }
 
@@ -541,6 +554,10 @@ module.exports = function(connectionController, config, environment) {
 
     function onPlayerScored(callback) {
         onPlayerScoredCallback = callback;
+    }
+
+    function onAllianceScored(callback) {
+        onAllianceScoredCallback = callback;
     }
 
     function destroy() {

@@ -17,9 +17,7 @@ module.exports = function(connectionController, CONFIG, ENVIRONMENT) {
 
         var mode = new getRandom()(connectionController, level)
             .start()
-            .done(function() {
-                next();
-            });
+            .done(next);
 
     }
 
