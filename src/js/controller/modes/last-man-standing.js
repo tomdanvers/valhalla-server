@@ -41,7 +41,7 @@ module.exports = function(connectionController, level, environment) {
         // Let clients know ...
 
         var payload = {
-            mode: 'deathmatch',
+            mode: 'lastmanstanding',
             state: state
         };
 
@@ -98,7 +98,7 @@ module.exports = function(connectionController, level, environment) {
 
         } else {
 
-            console.log('ERROR: Game Mode DeathMatch has no done callback.');
+            console.log('ERROR: Game Mode LastMasnStanding has no done callback.');
 
         }
 
