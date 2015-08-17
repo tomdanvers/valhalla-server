@@ -11,6 +11,7 @@ module.exports = function(id, character, isNPC, config) {
             alliance: null,
             x: 0,
             y: 0,
+            lives: -1,
             levelY: 0,
             previousX: 0,
             previousY: 0,

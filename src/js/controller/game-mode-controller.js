@@ -1,13 +1,14 @@
 var DeathMatch = require('./modes/death-match');
 var TeamDeathMatch = require('./modes/team-death-match');
+var LastManStanding = require('./modes/last-man-standing');
 
 var Level = require('../level');
 
 module.exports = function(connectionController, CONFIG, ENVIRONMENT) {
 
-    var MODES = [DeathMatch, TeamDeathMatch];
+    var MODES = [LastManStanding, DeathMatch, TeamDeathMatch];
     var RANDOM = false;
-    var SEQUENTIAL_COUNT = 0;
+    var SEQUENTIAL_COUNT = -1;
 
     var api = {
         next: next

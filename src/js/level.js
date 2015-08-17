@@ -9,9 +9,12 @@ var MappedList = require('./utils/mapped-list');
 module.exports = function(connectionController, config) {
 
     var api = {
+        maxLives: -1,
         changeState: changeState,
         addAlliances: addAlliances,
         addNPCs: addNPCs,
+        getLiveCount: getLiveCount,
+        setMaxLives: setMaxLives,
         onPlayerScored: onPlayerScored,
         onAllianceScored: onAllianceScored,
         destroy: destroy
@@ -189,6 +192,7 @@ module.exports = function(connectionController, config) {
     	var player = new Player(id, character, isNPC, config);
     	player.model.x = (map.widthPx - config.player.width) * Math.random();
     	player.model.y = player.height;
+        player.model.lives = api.maxLives;
 
     	players.add(player);
         sharedData.players.push(player.model);
@@ -456,7 +460,7 @@ module.exports = function(connectionController, config) {
         				}
         			}
 
-        		}else{
+        		}else if (player.model.lives === -1 || player.model.lives > 0){
 
         			respawn(player);
 
@@ -583,6 +587,9 @@ module.exports = function(connectionController, config) {
     }
 
     function death(player) {
+        if (player.model.lives > 0) {
+            player.model.lives --;
+        }
         player.isAlive = false;
     }
 
@@ -604,6 +611,21 @@ module.exports = function(connectionController, config) {
             case 'match':
                 break;
         }
+    }
+
+    function setMaxLives(value) {
+        api.maxLives = value;
+    }
+
+    function getLiveCount() {
+        var liveCount = 0;
+        players.each(function(player) {
+            if (player.model.lives === -1 || player.model.lives > 0) {
+                liveCount ++;
+            }
+        });
+
+        return liveCount;
     }
 
     function onPlayerScored(callback) {
