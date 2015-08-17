@@ -8,6 +8,7 @@ module.exports = function(id, character, isNPC, config) {
         alliance: null,
         model: {
             id: id,
+            alliance: null,
             x: 0,
             y: 0,
             levelY: 0,

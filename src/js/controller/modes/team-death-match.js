@@ -1,4 +1,4 @@
-module.exports = function(connectionController, level) {
+module.exports = function(connectionController, level, environment) {
 
     var api = {
         start: start,
@@ -10,22 +10,23 @@ module.exports = function(connectionController, level) {
 
     // Initialisation
 
-    level.addAlliances(['red', 'blue']);
+    level.addAlliances('red', 'blue');
+    level.addNPCs(24);
 
     // Win Criteria
 
-    var maxScore = 10;
+    var maxScore = 25;
 
     level.onAllianceScored(function(alliance, score) {
 
-        // if (score >= maxScore) {
-        //     level.onPlayerScored(null);
-        //     console.log('TeamDeathMatch: Player', player.character.name, 'won with score of', score);
-        //     endMatch({
-        //         winner: player.character.name,
-        //         score: score
-        //     });
-        // }
+        if (score >= maxScore) {
+            level.onAllianceScored(null);
+            console.log('TeamDeathMatch: Team', alliance.id, 'won with score of', score);
+            endMatch({
+                winner: alliance.id,
+                score: score
+            });
+        }
 
     });
 

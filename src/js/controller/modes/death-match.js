@@ -1,4 +1,4 @@
-module.exports = function(connectionController, level) {
+module.exports = function(connectionController, level, environment) {
 
     var api = {
         start: start,
@@ -7,6 +7,10 @@ module.exports = function(connectionController, level) {
 
     var state;
     var doneCallback = null;
+
+    // Initialisation
+
+    level.addNPCs(environment.npcCount);
 
     // Win Criteria
 

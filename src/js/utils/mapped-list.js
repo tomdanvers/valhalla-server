@@ -1,4 +1,4 @@
-module.exports = function() {
+module.exports = function(id) {
 
     var api = {
         count: 0,
@@ -25,7 +25,7 @@ module.exports = function() {
     function remove(item) {
 
         if (item === undefined) {
-            console.warn('Removing an item that doesn\'t exist');
+            console.warn('Removing an item from',id,'that doesn\'t exist');
         } else {
 
             delete map[item.id];

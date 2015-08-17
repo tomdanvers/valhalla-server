@@ -1,11 +1,11 @@
 var DeathMatch = require('./modes/death-match');
 var TeamDeathMatch = require('./modes/team-death-match');
 
-var Game = require('../game');
+var Level = require('../level');
 
 module.exports = function(connectionController, CONFIG, ENVIRONMENT) {
 
-    var MODES = [DeathMatch];
+    var MODES = [DeathMatch, TeamDeathMatch];
 
     var api = {
         next: next
@@ -13,9 +13,9 @@ module.exports = function(connectionController, CONFIG, ENVIRONMENT) {
 
     function next() {
 
-        var level = new Game(connectionController, CONFIG, ENVIRONMENT);
+        var level = new Level(connectionController, CONFIG);
 
-        var mode = new getRandom()(connectionController, level)
+        var mode = new getRandom()(connectionController, level, ENVIRONMENT)
             .start()
             .done(next);
 
