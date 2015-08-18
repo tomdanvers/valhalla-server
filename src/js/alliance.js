@@ -15,7 +15,8 @@ module.exports = function(id) {
         addPlayer: addPlayer,
         addEnemy: addEnemy,
         players: new MappedList('alliance-' + id),
-        enemies: new MappedList('alliance-foes-' + id)
+        enemies: new MappedList('alliance-foes-' + id),
+        getEnemyLiveCount: getEnemyLiveCount
     };
 
     function addPlayer(player) {
@@ -27,6 +28,18 @@ module.exports = function(id) {
 
     function addEnemy(enemy) {
         api.enemies.add(enemy);
+    }
+
+    function getEnemyLiveCount() {
+
+        var liveCount = 0;
+        api.enemies.each(function(player) {
+            if (player.model.lives === -1 || player.model.lives > 0) {
+                liveCount ++;
+            }
+        });
+
+        return liveCount;
     }
 
     return api;

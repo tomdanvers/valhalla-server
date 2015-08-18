@@ -301,7 +301,7 @@ module.exports = function(connectionController, config) {
 
     function update(timeDelta) {
 
-        if (state === 'match') {
+        if (state === 'match' || state === 'results') {
 
             for (var i = players.count - 1; i >= 0; i--) {
 
@@ -317,6 +317,10 @@ module.exports = function(connectionController, config) {
                             player.target = getClosestTarget(player);
                         } else {
         				    player.target = getRandomTarget(player);
+                        }
+
+                        if (player.target === null) {
+                            player.input.left = player.input.right = player.input.up = player.input.down = player.input.space = false;
                         }
 
         			} else if (player.model.isNPC && player.target) {
@@ -548,30 +552,35 @@ module.exports = function(connectionController, config) {
 
     function playerAttack(player, opponent) {
 
-        var diffX = player.model.x - opponent.model.x;
-    	var diffY = player.model.y - opponent.model.y;
-    	var distance;
-    	var damageMultiplier;
-    	if(Math.abs(diffX) < 150 && diffY < player.height && diffY > -player.height*.2){
-    		opponent.velocity.x = player.model.facing * 750;
-    		opponent.velocity.y = -400;
+        if (player.isAlive && opponent.isAlive) {
 
-    		player.velocity.x = -player.model.facing * 600;
+            var diffX = player.model.x - opponent.model.x;
+        	var diffY = player.model.y - opponent.model.y;
+        	var distance;
+        	var damageMultiplier;
+        	if(Math.abs(diffX) < 150 && diffY < player.height && diffY > -player.height*.2){
+        		opponent.velocity.x = player.model.facing * 750;
+        		opponent.velocity.y = -400;
 
-    		opponent.model.health -= 5;
-    		if(opponent.model.health <= 0){
-                // console.log('Warrior',player.model.id,'has score of',player.model.score);
-                death(opponent);
+        		player.velocity.x = -player.model.facing * 600;
 
-                player.model.score ++;
-                playerScored(player, player.model.score);
+        		opponent.model.health -= 5;
+        		if(opponent.model.health <= 0){
+                    // console.log('Warrior',player.model.id,'has score of',player.model.score);
+                    death(opponent);
 
-                if (player.alliance) {
-                    player.alliance.score ++;
-                    allianceScored(player.alliance, player.alliance.score);
-                }
-    		}
-    	}
+                    player.model.score ++;
+                    playerScored(player, player.model.score);
+
+                    if (player.alliance) {
+                        player.alliance.score ++;
+                        allianceScored(player.alliance, player.alliance.score);
+                    }
+        		}
+        	}
+
+        }
+
     }
 
     function playerScored(player, score) {
@@ -618,6 +627,7 @@ module.exports = function(connectionController, config) {
     }
 
     function getLiveCount() {
+
         var liveCount = 0;
         players.each(function(player) {
             if (player.model.lives === -1 || player.model.lives > 0) {
@@ -626,6 +636,7 @@ module.exports = function(connectionController, config) {
         });
 
         return liveCount;
+
     }
 
     function onPlayerScored(callback) {

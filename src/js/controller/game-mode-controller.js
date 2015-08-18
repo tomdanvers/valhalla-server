@@ -1,12 +1,13 @@
 var DeathMatch = require('./modes/death-match');
 var TeamDeathMatch = require('./modes/team-death-match');
 var LastManStanding = require('./modes/last-man-standing');
+var TeamLastManStanding = require('./modes/team-last-man-standing');
 
 var Level = require('../level');
 
 module.exports = function(connectionController, CONFIG, ENVIRONMENT) {
 
-    var MODES = [LastManStanding, DeathMatch, TeamDeathMatch];
+    var MODES = [TeamLastManStanding, LastManStanding, DeathMatch, TeamDeathMatch];
     var RANDOM = false;
     var SEQUENTIAL_COUNT = -1;
 
@@ -25,11 +26,13 @@ module.exports = function(connectionController, CONFIG, ENVIRONMENT) {
     }
 
     function getMode() {
+
         if (RANDOM) {
             return getRandom();
         } else {
             return getSequential();
         }
+
     }
 
     function getRandom() {
