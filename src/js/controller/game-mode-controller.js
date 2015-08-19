@@ -8,8 +8,13 @@ var Level = require('../level');
 module.exports = function(connectionController, CONFIG, ENVIRONMENT) {
 
     var MODES = [TeamLastManStanding, LastManStanding, DeathMatch, TeamDeathMatch];
-    var RANDOM = false;
-    var SEQUENTIAL_COUNT = -1;
+    // var MODES = [DeathMatch];
+    MODES.count = 0;
+    MODES.random = false;
+
+    var MAPS = CONFIG.maps;
+    MAPS.count = 0;
+    MAPS.random = false;
 
     var api = {
         next: next
@@ -17,36 +22,70 @@ module.exports = function(connectionController, CONFIG, ENVIRONMENT) {
 
     function next() {
 
-        var level = new Level(connectionController, CONFIG);
+        var map = get(MAPS);
 
-        var mode = new getMode()(connectionController, level, ENVIRONMENT)
+        connectionController.map = map.id;
+
+        var level = new Level(connectionController, map, CONFIG);
+
+        var mode = new get(MODES)(connectionController, level, ENVIRONMENT)
+            .onChangeState(function(modeId, stateId, stateData) {
+
+                // Let game objects know...
+
+                connectionController.mode = modeId;
+                connectionController.state = stateId;
+
+                level.changeState(stateId);
+
+                // Let clients know ...
+
+                var payload = {
+                    mode: modeId,
+                    state: stateId,
+                    map: map.id
+                };
+
+                // ... and pass through state specific data ...
+
+                if (stateData !== undefined) {
+                    for (var key in stateData) {
+                        payload[key] = stateData[key];
+                    }
+                }
+
+                connectionController.emit('mode:state:change', payload);
+            })
             .start()
             .done(next);
 
     }
 
-    function getMode() {
+    function get(arr) {
 
-        if (RANDOM) {
-            return getRandom();
+        if (arr.random) {
+            return getRandom(arr);
         } else {
-            return getSequential();
+            return getSequential(arr);
         }
 
     }
 
-    function getRandom() {
-        return MODES[Math.floor(Math.random() * MODES.length)];
+    function getRandom(arr) {
+
+        return arr[Math.floor(Math.random() * arr.length)];
+
     }
 
-    function getSequential() {
-        SEQUENTIAL_COUNT++;
-        if (SEQUENTIAL_COUNT === Number.MAX_VALUE - 1) {
-            SEQUENTIAL_COUNT = 0;
+    function getSequential(arr) {
+
+        arr.count ++;
+        if (arr.count === Number.MAX_VALUE - 1) {
+            arr.count = 0;
         }
-        return MODES[SEQUENTIAL_COUNT % MODES.length];
-    }
+        return arr[arr.count % arr.length];
 
+    }
 
     return api;
 }

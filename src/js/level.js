@@ -6,7 +6,7 @@ var Alliance = require('./alliance');
 var CharacterUtils = require('./utils/character-utils');
 var MappedList = require('./utils/mapped-list');
 
-module.exports = function(connectionController, config) {
+module.exports = function(connectionController, mapData, config) {
 
     var api = {
         maxLives: -1,
@@ -15,6 +15,7 @@ module.exports = function(connectionController, config) {
         addNPCs: addNPCs,
         getLiveCount: getLiveCount,
         setMaxLives: setMaxLives,
+        initialiseConnections: initialiseConnections,
         onPlayerScored: onPlayerScored,
         onAllianceScored: onAllianceScored,
         destroy: destroy
@@ -25,7 +26,7 @@ module.exports = function(connectionController, config) {
 
     var state;
 
-    var map = new Map(config.map);
+    var map = new Map(mapData);
 
     var players = new MappedList('players');
 
@@ -54,26 +55,29 @@ module.exports = function(connectionController, config) {
     });
 
     // WebSocket listeners / handlers
+    function initialiseConnections() {
 
-    // Existing Connections
-    connectionController.input.each(function(socket) {
-        connectionHandler(socket);
-    });
-
-    connectionController.both.each(function(socket) {
-        connectionHandler(socket);
-    });
-
-    // New Connections
-    connectionController.connection(function(socket) {
-
-        if (socket.type === 'both' || socket.type === 'input') {
-
+        // Existing Connections
+        connectionController.input.each(function(socket) {
             connectionHandler(socket);
+        });
 
-        }
+        connectionController.both.each(function(socket) {
+            connectionHandler(socket);
+        });
 
-    });
+        // New Connections
+        connectionController.connection(function(socket) {
+
+            if (socket.type === 'both' || socket.type === 'input') {
+
+                connectionHandler(socket);
+
+            }
+
+        });
+
+    }
 
     function connectionHandler(socket) {
 
@@ -303,35 +307,32 @@ module.exports = function(connectionController, config) {
 
         if (state === 'match' || state === 'results') {
 
-            for (var i = players.count - 1; i >= 0; i--) {
-
-                var player = players.get(i);
+            players.each(function(player){ //START UPDATE
 
                 if(player.isAlive){
 
         			// Target
-        			if (player.model.isNPC && player.target === null && Math.random() > .99) {
+        			if (player.model.isNPC && player.target === null && Math.random() > .9) {
 
                         // New target for this npc
-                        if (Math.random() > .25) {
+                        if (Math.random() > .15) {
                             player.target = getClosestTarget(player);
                         } else {
         				    player.target = getRandomTarget(player);
                         }
 
                         if (player.target === null) {
-                            player.input.left = player.input.right = player.input.up = player.input.down = player.input.space = false;
+                            player.clearInput();
                         }
 
         			} else if (player.model.isNPC && player.target) {
 
-        				if (player.target.isAlive) {
+                        if (player.target.isAlive) {
 
-                            // Follow target
                             var diffX = player.target.model.x - player.model.x;
         					var diffY = player.target.model.y - player.model.y;
 
-                            // console.log(diffX)
+                            // Follow target
 
         					if (diffX < -35) {
         						player.input.left = true;
@@ -342,8 +343,18 @@ module.exports = function(connectionController, config) {
                                 player.input.right = true;
                                 player.input.space = false;
                             } else {
-                                player.input.left = false;
-                                player.input.right = false;
+                                if (player.model.facing === -1 && diffX > 0) {
+                                    player.input.left = true;
+                                } else {
+                                    player.input.left = false;
+                                }
+
+                                if (player.model.facing === 1 && diffX < 0) {
+                                    player.input.right = true;
+                                } else {
+                                    player.input.right = false;
+                                }
+
                                 player.input.space = true;
         					}
 
@@ -362,6 +373,7 @@ module.exports = function(connectionController, config) {
 
                             // Clear target
         					player.target = null;
+                            player.clearInput();
 
         				}
 
@@ -450,7 +462,9 @@ module.exports = function(connectionController, config) {
         			// Attack
         			if(player.attackCooldown > 0){
         				player.attackCooldown -= timeDelta;
-        			}else if(player.attackCooldown <= 0 && player.input.space){
+                        player.model.justAttacked = false;
+                    }else if(player.attackCooldown <= 0 && player.input.space){
+                        player.model.justAttacked = true;
         				playerAttacks(player);
         			}
 
@@ -469,7 +483,8 @@ module.exports = function(connectionController, config) {
         			respawn(player);
 
         		}
-        	}
+
+            }); //END UPDATE
 
             connectionController.emit('update', {
                 time: time.current,
@@ -524,6 +539,8 @@ module.exports = function(connectionController, config) {
     	var attackRight = player.model.facing > 0;
     	var opponent;
 
+        player.model.justAttacked = true;
+
         var enemies;
         if (player.alliance) {
             enemies = player.alliance.enemies;
@@ -576,7 +593,9 @@ module.exports = function(connectionController, config) {
                         player.alliance.score ++;
                         allianceScored(player.alliance, player.alliance.score);
                     }
-        		}
+        		} else if (Math.random() > .75) {
+                    opponent.target = player;
+                }
         	}
 
         }

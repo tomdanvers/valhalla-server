@@ -2,16 +2,19 @@ module.exports = function(connectionController, level, environment) {
 
     var api = {
         start: start,
+        onChangeState: onChangeState,
         done: done
     };
 
     var state;
     var doneCallback = null;
+    var onChangeStateCallback = null;
 
     // Initialisation
 
     level.addAlliances('red', 'blue');
     level.addNPCs(24);
+    level.initialiseConnections();
 
     // Win Criteria
 
@@ -32,29 +35,7 @@ module.exports = function(connectionController, level, environment) {
 
     function changeState(newState, data) {
 
-        state = newState;
-
-        // Let game objects know...
-
-        connectionController.changeState(state);
-        level.changeState(state);
-
-        // Let clients know ...
-
-        var payload = {
-            mode: 'teamdeathmatch',
-            state: state
-        };
-
-        // ... and pass through state specific data ...
-
-        if (data !== undefined) {
-            for (var key in data) {
-                payload[key] = data[key];
-            }
-        }
-
-        connectionController.emit('mode:state:change', payload);
+        onChangeStateCallback('deathmatch', newState, data);
 
     }
 
@@ -106,6 +87,13 @@ module.exports = function(connectionController, level, environment) {
     }
 
     // Chaining...
+
+    function onChangeState(callback) {
+
+        onChangeStateCallback = callback;
+
+        return api;
+    }
 
     function done(callback) {
 

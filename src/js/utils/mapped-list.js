@@ -59,7 +59,7 @@ module.exports = function(id) {
     }
 
     function each(callback) {
-        for (var i = 0; i < api.count; i++) {
+        for (var i = api.count - 1; i >= 0; i--) {
             callback(list[i]);
         }
     }

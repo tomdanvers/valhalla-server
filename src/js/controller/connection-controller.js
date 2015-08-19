@@ -14,6 +14,7 @@ module.exports = function(io, CONFIG, ENVIRONMENT) {
     var connectionCallback = null;
     var disconnectionCallback = null;
     var state = null;
+    var map = null;
 
     var typesMap = {
         'screen': TYPE_SCREEN,
@@ -25,7 +26,9 @@ module.exports = function(io, CONFIG, ENVIRONMENT) {
         emit: emit,
         connection: connection,
         disconnection: disconnection,
-        changeState: changeState,
+        state: null,
+        map: null,
+        mode: null,
         input: TYPE_INPUT,
         both: TYPE_BOTH,
         screen: TYPE_SCREEN
@@ -58,7 +61,9 @@ module.exports = function(io, CONFIG, ENVIRONMENT) {
         // console.log('CC.handshakeHandler(', this.id, data.type, this.character.name, ')');
 
         this.emit('connected', {
-            state: state,
+            mode: api.mode,
+            state: api.state,
+            map: api.map,
             character: this.character
         });
 
@@ -113,11 +118,6 @@ module.exports = function(io, CONFIG, ENVIRONMENT) {
 
         return api;
     }
-
-    function changeState(newState) {
-        state = newState;
-    }
-
 
     return api;
 }

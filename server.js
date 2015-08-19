@@ -9,9 +9,18 @@ var HTTP = require('./src/js/http');
 var GameModeController = require('./src/js/controller/game-mode-controller');
 var ConnectionController = require('./src/js/controller/connection-controller');
 
+var mapDirRead = fs.readdirSync('valhalla-map');
+var maps = [];
+for (var i = 0; i < mapDirRead.length; i++) {
+    if (mapDirRead[i].indexOf('.json') > -1) {
+        var map = JSON.parse(fs.readFileSync('valhalla-map/' + mapDirRead[i], encoding="ascii"));
+        map.id = mapDirRead[i];
+        maps.push(map);
+    }
+}
 
 var CONFIG = {
-	map : JSON.parse(fs.readFileSync('valhalla-map/valhalla-map.json', encoding="ascii")),
+	maps : maps,
 	player : {
 		width:80,
 		height:100,

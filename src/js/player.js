@@ -50,7 +50,10 @@ module.exports = function(id, character, isNPC, config) {
         isGrounded: false,
         isAlive: true,
         attackCooldown: 0,
-        target: null
+        target: null,
+        clearInput: function(){
+            this.input.left = this.input.right = this.input.up = this.input.down = this.input.space = false;
+        }
     };
 
     return api;
