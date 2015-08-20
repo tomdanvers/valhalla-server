@@ -25,7 +25,8 @@ module.exports = function(connectionController, level, environment) {
             level.onPlayerScored(null);
             console.log('DeathMatch: Player', player.character.name, 'won with score of', score);
             endMatch({
-                winner: player.character.name,
+                winnerId: player.model.id,
+                winnerName: player.character.name,
                 score: score
             });
         }
