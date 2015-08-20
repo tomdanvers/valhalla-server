@@ -24,6 +24,7 @@ module.exports = function(io, CONFIG, ENVIRONMENT) {
 
     var api = {
         emit: emit,
+        connectionCount: 0,
         connection: connection,
         disconnection: disconnection,
         state: null,
@@ -39,6 +40,8 @@ module.exports = function(io, CONFIG, ENVIRONMENT) {
     function connectionHandler(socket) {
 
         // console.log('CC.connectionHandler(', socket.id, ')');
+
+        api.connectionCount ++;
 
         // Send initial handshake...
         socket.emit('handshake');
@@ -58,7 +61,8 @@ module.exports = function(io, CONFIG, ENVIRONMENT) {
         this.character = CharacterUtils.getRandomCharacter();
         type.add(this);
 
-        // console.log('CC.handshakeHandler(', this.id, data.type, this.character.name, ')');
+        console.log('A new hero enters Valhalla:', this.id, this.character.name);
+        console.log('Connections:', api.connectionCount);
 
         this.emit('connected', {
             mode: api.mode,
@@ -81,6 +85,13 @@ module.exports = function(io, CONFIG, ENVIRONMENT) {
         // console.log('CC.disconnectionHandler(', this.id, this.type, ')');
 
         //this.off('disconnect', disconnectionHandler);
+
+        api.connectionCount --;
+
+        if (api.connectionCount === 0) {
+            console.log('Connections:', api.connectionCount);
+        }
+
 
         var type = typesMap[this.type];
 
