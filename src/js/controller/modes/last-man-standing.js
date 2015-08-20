@@ -34,7 +34,7 @@ module.exports = function(connectionController, level, environment) {
 
     function changeState(newState, data) {
 
-        onChangeStateCallback('deathmatch', newState, data);
+        onChangeStateCallback('lastmanstanding', newState, data);
 
     }
 

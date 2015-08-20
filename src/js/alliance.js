@@ -5,12 +5,13 @@ var TEAM_COLOURS = {
     'blue': 0x0000FF
 };
 
-module.exports = function(id) {
+module.exports = function(id, deployment) {
 
     // console.log('Alliance(', id, ')');
 
     var api = {
         id: id,
+        deployment: deployment,
         score: 0,
         addPlayer: addPlayer,
         addEnemy: addEnemy,

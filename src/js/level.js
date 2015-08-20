@@ -6,6 +6,7 @@ var Alliance = require('./alliance');
 var CharacterUtils = require('./utils/character-utils');
 var MappedList = require('./utils/mapped-list');
 
+
 module.exports = function(connectionController, mapData, config) {
 
     var api = {
@@ -40,6 +41,15 @@ module.exports = function(connectionController, mapData, config) {
         bottom: map.heightPx,
         gravity: 2000
     };
+
+    // Deployment zones
+    var viewportW = map.widthPx - config.player.width;
+    var viewportHalfW = viewportW * .5;
+
+    var DEPLOYMENT_ZONES = [
+        {x: viewportHalfW * .1, width: viewportHalfW * .8},
+        {x: viewportHalfW + viewportHalfW * .1, width: viewportHalfW * .8},
+    ];
 
     // Data broadcasted to connected clients on update
     var sharedData = {
@@ -180,7 +190,8 @@ module.exports = function(connectionController, mapData, config) {
     function addAlliances() {
         // Arguments are array of alliance ids
         for (var i = 0; i < arguments.length; i++) {
-            var alliance = new Alliance(arguments[i]);
+            var deployment = DEPLOYMENT_ZONES[i];
+            var alliance = new Alliance(arguments[i], deployment);
             alliances.add(alliance);
         }
     }
@@ -499,7 +510,12 @@ module.exports = function(connectionController, mapData, config) {
         player.isAlive = true;
         player.model.health = config.player.healthMax;
         var viewportW = map.widthPx - config.player.width;
-        player.model.x = viewportW * .1 + viewportW * .8 * Math.random();
+        if (player.alliance) {
+            player.model.x = player.alliance.deployment.x + player.alliance.deployment.width * Math.random();
+        } else {
+            player.model.x = viewportW * .1 + viewportW * .8 * Math.random();
+        }
+
         player.model.y = -player.height;
         player.velocity.x = 0;
         player.velocity.y = 0;
