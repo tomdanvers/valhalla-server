@@ -23,7 +23,7 @@ module.exports = function(connectionController, level, environment) {
 
         if (liveCount <= 1) {
             level.onPlayerScored(null);
-            console.log('Last Man Standing: Player', player.character.name, 'won with score of', score);
+            // console.log('Last Man Standing: Player', player.character.name, 'won with score of', score);
             endMatch({
                 winnerId: player.model.id,
                 winnerName: player.character.name,
@@ -41,7 +41,7 @@ module.exports = function(connectionController, level, environment) {
 
     function start() {
 
-        console.log('LastManStanding.start()');
+        // console.log('LastManStanding.start()');
 
         intro();
 

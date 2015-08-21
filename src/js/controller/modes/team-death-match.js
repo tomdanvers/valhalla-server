@@ -24,7 +24,7 @@ module.exports = function(connectionController, level, environment) {
 
         if (score >= maxScore) {
             level.onAllianceScored(null);
-            console.log('TeamDeathMatch: Team', alliance.id, 'won with score of', score);
+            // console.log('TeamDeathMatch: Team', alliance.id, 'won with score of', score);
             endMatch({
                 winner: alliance.id,
                 score: score
@@ -41,7 +41,7 @@ module.exports = function(connectionController, level, environment) {
 
     function start() {
 
-        console.log('TeamDeathMatch.start()');
+        // console.log('TeamDeathMatch.start()');
 
         intro();
 

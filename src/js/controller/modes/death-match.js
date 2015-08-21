@@ -23,7 +23,7 @@ module.exports = function(connectionController, level, environment) {
 
         if (score >= maxScore) {
             level.onPlayerScored(null);
-            console.log('DeathMatch: Player', player.character.name, 'won with score of', score);
+            // console.log('DeathMatch: Player', player.character.name, 'won with score of', score);
             endMatch({
                 winnerId: player.model.id,
                 winnerName: player.character.name,
@@ -41,7 +41,7 @@ module.exports = function(connectionController, level, environment) {
 
     function start() {
 
-        console.log('DeathMatch.start()');
+        // console.log('DeathMatch.start()');
 
         intro();
 

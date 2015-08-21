@@ -24,7 +24,7 @@ module.exports = function(connectionController, level, environment) {
 
         if (liveCount <= 0) {
             level.onAllianceScored(null);
-            console.log('Team Last Man Standing: Team', alliance.id, 'won with score of', score);
+            // console.log('Team Last Man Standing: Team', alliance.id, 'won with score of', score);
             endMatch({
                 winner: alliance.id,
                 score: score
@@ -41,7 +41,7 @@ module.exports = function(connectionController, level, environment) {
 
     function start() {
 
-        console.log('TeamLastManStanding.start()');
+        // console.log('TeamLastManStanding.start()');
 
         intro();
 
