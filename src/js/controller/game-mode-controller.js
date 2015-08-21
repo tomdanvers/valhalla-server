@@ -7,8 +7,8 @@ var Level = require('../level');
 
 module.exports = function(connectionController, CONFIG, ENVIRONMENT) {
 
-    var MODES = [TeamLastManStanding, LastManStanding, DeathMatch, TeamDeathMatch];
-    // var MODES = [DeathMatch];
+    // var MODES = [TeamLastManStanding, LastManStanding, DeathMatch, TeamDeathMatch];
+    var MODES = [DeathMatch, TeamDeathMatch];
     MODES.count = 0;
     MODES.random = false;
 
